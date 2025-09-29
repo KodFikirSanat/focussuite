@@ -1,13 +1,19 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TimerSession } from '@/types';
+import { Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { TimerSession } from '@/types';
+
 import { ProgressRing } from './ProgressRing';
 
-interface TimerDisplayProps {
-  session?: TimerSession;
+export interface TimerDisplayProps {
+  session: TimerSession | null;
   remainingTime: number;
   isRunning: boolean;
+  nextSessionLabel?: string;
+  completedWorkSessions?: number;
+  cyclesBeforeLongBreak?: number;
   onPress?: () => void;
 }
 
@@ -15,61 +21,127 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   session,
   remainingTime,
   isRunning,
+  nextSessionLabel,
+  completedWorkSessions = 0,
+  cyclesBeforeLongBreak,
   onPress,
 }) => {
-  const formatTime = (seconds: number) => {
+  const accentColor = useThemeColor(
+    {},
+    session?.type === 'work'
+      ? 'tint'
+      : session?.type === 'break'
+        ? 'success'
+        : 'secondary',
+  );
+  const surfaceColor = useThemeColor({}, 'surface');
+  const metaColor = useThemeColor({}, 'icon');
+  const tertiaryColor = useThemeColor({}, 'tertiary');
+
+  const formatTime = React.useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
-  const getSessionTitle = () => {
-    if (!session) return 'Ready';
-    switch (session.type) {
-      case 'work': return 'Focus';
-      case 'break': return 'Break';
-      case 'longBreak': return 'Long Break';
-      default: return 'Timer';
+  const progress = React.useMemo(() => {
+    if (!session || session.duration <= 0) {
+      return 0;
     }
-  };
 
-  const getProgress = () => {
-    if (!session) return 0;
-    return ((session.duration - remainingTime) / session.duration) * 100;
-  };
+    const elapsed = session.duration - remainingTime;
+    const ratio = Math.max(0, Math.min(1, elapsed / session.duration));
+    return ratio * 100;
+  }, [remainingTime, session]);
+
+  const cycleProgress = React.useMemo(() => {
+    if (!cyclesBeforeLongBreak || cyclesBeforeLongBreak <= 1) {
+      return undefined;
+    }
+
+    if (!session) {
+      return `0/${cyclesBeforeLongBreak} döngü`;
+    }
+
+    const completedModulo = completedWorkSessions % cyclesBeforeLongBreak;
+
+    if (session.type === 'work') {
+      return `${completedModulo + 1}/${cyclesBeforeLongBreak} döngü`;
+    }
+
+    return `${completedModulo === 0 ? cyclesBeforeLongBreak : completedModulo}/${cyclesBeforeLongBreak} döngü`;
+  }, [completedWorkSessions, cyclesBeforeLongBreak, session]);
+
+  const Wrapper = onPress ? Pressable : View;
 
   return (
-    <View style={styles.container}>
-      {/* TODO: Implement ProgressRing component */}
-      <ProgressRing
-        size={250}
-        progress={getProgress()}
-        strokeWidth={8}
-        color={session?.type === 'work' ? '#FF6B6B' : '#4ECDC4'}
-      />
+    <Wrapper
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel="Pomodoro sayacı"
+      onPress={onPress}
+      style={styles.container}
+    >
+      <View style={styles.progressRingWrapper}>
+        <ProgressRing
+          size={240}
+          progress={progress}
+          color={accentColor}
+          backgroundColor={surfaceColor}
+        />
 
-      <View style={styles.content}>
-        <ThemedText type="title" style={styles.timeText}>
-          {formatTime(remainingTime)}
-        </ThemedText>
+        <View style={styles.content} pointerEvents="none">
+          <ThemedText type="title" style={styles.timeText}>
+            {formatTime(remainingTime)}
+          </ThemedText>
 
-        <ThemedText style={styles.sessionType}>
-          {getSessionTitle()}
-        </ThemedText>
+          <ThemedText style={[styles.sessionTitle, { color: accentColor }]}>
+            {session ? getSessionLabel(session.type) : 'Hazır'}
+          </ThemedText>
 
-        <ThemedText style={styles.status}>
-          {isRunning ? 'Running' : 'Paused'}
-        </ThemedText>
+          <ThemedText style={[styles.status, { color: metaColor }]}>
+            {isRunning ? 'Çalışıyor' : 'Duraklatıldı'}
+          </ThemedText>
+
+          {cycleProgress && (
+            <ThemedText style={[styles.meta, { color: tertiaryColor }]}>
+              {cycleProgress}
+            </ThemedText>
+          )}
+
+          {nextSessionLabel && (
+            <ThemedText style={[styles.nextSession, { color: metaColor }]}>
+              Sıradaki: {nextSessionLabel}
+            </ThemedText>
+          )}
+        </View>
       </View>
-    </View>
+    </Wrapper>
   );
+};
+
+const getSessionLabel = (type: TimerSession['type']) => {
+  switch (type) {
+    case 'work':
+      return 'Odaklan';
+    case 'break':
+      return 'Ara';
+    case 'longBreak':
+      return 'Uzun Ara';
+    default:
+      return 'Zamanlayıcı';
+  }
 };
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  progressRingWrapper: {
+    width: 240,
+    height: 240,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
   content: {
     position: 'absolute',
@@ -77,21 +149,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timeText: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontSize: 54,
+    fontWeight: '700',
   },
-  sessionType: {
+  sessionTitle: {
+    marginTop: 12,
     fontSize: 18,
     fontWeight: '600',
-    textAlign: 'center',
-    marginTop: 8,
-    opacity: 0.8,
   },
   status: {
-    fontSize: 14,
-    textAlign: 'center',
+    marginTop: 6,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  meta: {
+    marginTop: 6,
+    fontSize: 13,
+  },
+  nextSession: {
     marginTop: 4,
-    opacity: 0.6,
+    fontSize: 13,
   },
 });

@@ -1,7 +1,6 @@
-export { TimerDisplay } from './TimerDisplay';
 export { ProgressRing } from './ProgressRing';
 export { TimerControls } from './TimerControls';
-
-// TODO: Additional timer components to implement
-// export { TimerPresets } from './TimerPresets';
-// export { SessionTypeSelector } from './SessionTypeSelector';
+export { TimerDisplay } from './TimerDisplay';
+export { TimerDurationControls } from './TimerDurationControls';
+export { TimerPresets } from './TimerPresets';
+export type { TimerPresetOption } from './TimerPresets';
