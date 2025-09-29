@@ -341,9 +341,9 @@ export default function HomeScreen() {
     setProjectModalVisible(false);
   }, [projectForm.description, projectForm.title]);
 
-  const openTaskModal = React.useCallback((projectId: string) => {
+  const openTaskModal = React.useCallback((projectId: string, priority: TaskPriority = 'medium') => {
     setTaskModalState({ visible: true, projectId });
-    setTaskForm({ title: '', description: '', priority: 'medium' });
+    setTaskForm({ title: '', description: '', priority });
     setTaskFormError(undefined);
   }, []);
 

@@ -18,7 +18,7 @@ export interface ProjectWithResources extends Project {
 
 interface ProjectCardProps {
   project: ProjectWithResources;
-  onAddTask: (projectId: string) => void;
+  onAddTask: (projectId: string, priority?: Task['priority']) => void;
   onAddResource: (projectId: string) => void;
   onToggleTask: (projectId: string, taskId: string) => void;
   onDeleteTask: (projectId: string, taskId: string) => void;
@@ -194,7 +194,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </View>
 
             {groupedTasks[priority].length === 0 ? (
-              <ThemedText style={styles.emptyText}>Görev ekle</ThemedText>
+              <Pressable
+                style={[
+                  styles.emptyAction,
+                  {
+                    backgroundColor: hexToRgba(priorityAccent[priority], 0.1),
+                    borderColor: hexToRgba(priorityAccent[priority], 0.2),
+                  },
+                ]}
+                onPress={() => onAddTask(project.id, priority)}
+                accessibilityRole="button"
+                accessibilityLabel={`${PRIORITY_LABELS[priority]} için görev ekle`}
+              >
+                <IconSymbol
+                  name="plus.circle.fill"
+                  size={18}
+                  color={priorityAccent[priority]}
+                />
+                <ThemedText
+                  style={[styles.emptyActionText, { color: priorityAccent[priority] }]}
+                >
+                  Görev ekle
+                </ThemedText>
+              </Pressable>
             ) : (
               groupedTasks[priority].map((task) => (
                 <Pressable
@@ -327,6 +349,20 @@ const styles = StyleSheet.create({
   emptyText: {
     opacity: 0.7,
     fontSize: 14,
+  },
+  emptyAction: {
+    marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  emptyActionText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   resourceList: {
     gap: 12,
