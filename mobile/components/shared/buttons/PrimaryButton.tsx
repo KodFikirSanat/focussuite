@@ -1,9 +1,11 @@
-import React from 'react';
-import { Pressable, StyleSheet, ActivityIndicator, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { BaseButtonProps } from '@/types';
+import React from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+
 import { ThemedText } from '@/components/themed-text';
+import { Colors } from '@/constants/theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { BaseButtonProps, ThemeVariant } from '@/types';
 
 interface PrimaryButtonProps extends BaseButtonProps {
   title: string;
@@ -11,6 +13,26 @@ interface PrimaryButtonProps extends BaseButtonProps {
   icon?: React.ReactNode;
   fullWidth?: boolean;
 }
+
+type ThemeColorName = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+const VARIANT_BACKGROUND_COLOR: Record<ThemeVariant, ThemeColorName> = {
+  primary: 'tint',
+  secondary: 'secondary',
+  tertiary: 'tertiary',
+  danger: 'danger',
+  warning: 'warning',
+  success: 'success',
+};
+
+const VARIANT_TEXT_COLOR: Record<ThemeVariant, ThemeColorName> = {
+  primary: 'onTint',
+  secondary: 'onSecondary',
+  tertiary: 'onTertiary',
+  danger: 'onDanger',
+  warning: 'onWarning',
+  success: 'onSuccess',
+};
 
 export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   title,
@@ -24,7 +46,8 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   style,
   ...rest
 }) => {
-  const tintColor = useThemeColor({}, 'tint');
+  const backgroundColor = useThemeColor({}, VARIANT_BACKGROUND_COLOR[variant] ?? 'tint');
+  const textColor = useThemeColor({}, VARIANT_TEXT_COLOR[variant] ?? 'onTint');
 
   const handlePress = () => {
     if (disabled || loading) return;
@@ -36,13 +59,10 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   const getButtonStyle = () => {
     const baseStyle = styles.button;
     const sizeStyle = styles[`size_${size}`];
-    const variantStyle = styles[`variant_${variant}`];
-
     return [
       baseStyle,
       sizeStyle,
-      variantStyle,
-      { backgroundColor: tintColor },
+      { backgroundColor },
       fullWidth && styles.fullWidth,
       (disabled || loading) && styles.disabled,
       style,
@@ -53,7 +73,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     const baseStyle = styles.text;
     const sizeTextStyle = styles[`text_${size}`];
 
-    return [baseStyle, sizeTextStyle];
+    return [baseStyle, sizeTextStyle, { color: textColor }];
   };
 
   return (
@@ -70,7 +90,7 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     >
       <View style={styles.content}>
         {loading ? (
-          <ActivityIndicator size="small" color="white" />
+          <ActivityIndicator size="small" color={textColor} />
         ) : (
           <>
             {icon && <View style={styles.iconContainer}>{icon}</View>}

@@ -5,8 +5,23 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#007AFF';
+const tintColorDark = '#0A84FF';
+
+const secondaryColorLight = '#5856D6';
+const secondaryColorDark = '#5E5CE6';
+
+const successColorLight = '#34C759';
+const successColorDark = '#30D158';
+
+const warningColorLight = '#FF9500';
+const warningColorDark = '#FF9F0A';
+
+const dangerColorLight = '#FF3B30';
+const dangerColorDark = '#FF453A';
+
+const tertiaryColorLight = '#8E8E93';
+const tertiaryColorDark = '#636366';
 
 export const Colors = {
   light: {
@@ -16,6 +31,18 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    secondary: secondaryColorLight,
+    tertiary: tertiaryColorLight,
+    success: successColorLight,
+    warning: warningColorLight,
+    danger: dangerColorLight,
+    onTint: '#FFFFFF',
+    onSecondary: '#FFFFFF',
+    onTertiary: '#11181C',
+    onSuccess: '#FFFFFF',
+    onWarning: '#FFFFFF',
+    onDanger: '#FFFFFF',
+    surface: '#F2F2F7',
   },
   dark: {
     text: '#ECEDEE',
@@ -24,6 +51,18 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    secondary: secondaryColorDark,
+    tertiary: tertiaryColorDark,
+    success: successColorDark,
+    warning: warningColorDark,
+    danger: dangerColorDark,
+    onTint: '#FFFFFF',
+    onSecondary: '#0B0B0D',
+    onTertiary: '#FFFFFF',
+    onSuccess: '#0B0B0D',
+    onWarning: '#0B0B0D',
+    onDanger: '#0B0B0D',
+    surface: '#1C1C1E',
   },
 };
 

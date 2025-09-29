@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { PrimaryButton, SecondaryButton, IconButton } from '@/components/shared/buttons';
+import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/buttons';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 interface TimerControlsProps {
   isRunning: boolean;
@@ -51,6 +51,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
         <PrimaryButton
           title={isRunning ? 'Pause' : 'Start'}
           onPress={onPlayPause}
+          variant={isRunning ? 'warning' : 'primary'}
           disabled={disabled}
           icon={
             <IconSymbol
