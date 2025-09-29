@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/buttons';
 import { Card } from '@/components/shared/layout';
@@ -46,6 +46,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const successColor = useThemeColor({}, 'success');
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
+  const { width } = useWindowDimensions();
+  const isCompact = width < 768;
 
   const groupedTasks = React.useMemo(() => ({
     high: project.tasks.filter((task) => task.priority === 'high'),
@@ -58,6 +60,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     medium: warningColor,
     low: successColor,
   };
+
+  const getPriorityBackground = (priority: Task['priority']) => hexToRgba(priorityAccent[priority], 0.12);
+
+  const getTaskBackground = (priority: Task['priority'], completed: boolean) =>
+    completed ? hexToRgba(successColor, 0.14) : getPriorityBackground(priority);
+
+  const priorityTextColor = priorityAccent;
 
   return (
     <Card style={styles.card}>
@@ -165,18 +174,23 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         />
       </View>
 
-      <View style={styles.taskGroups}>
-  {(Object.keys(groupedTasks) as Task['priority'][]).map((priority) => (
-          <View key={priority} style={styles.priorityColumn}>
+      <View style={[styles.taskGroups, isCompact && styles.taskGroupsStacked]}>
+        {(Object.keys(groupedTasks) as Task['priority'][]).map((priority) => (
+          <View
+            key={priority}
+            style={[styles.priorityColumn, isCompact && styles.priorityColumnStacked]}
+          >
             <View style={styles.priorityHeader}>
-              <View style={[styles.priorityBadge, { backgroundColor: `${priorityAccent[priority]}33` }]}> 
-                <ThemedText style={[styles.priorityLabel, { color: priorityAccent[priority] }]}> 
-                  {PRIORITY_LABELS[priority]}
+              <ThemedText style={[styles.priorityLabel, { color: priorityTextColor[priority] }]}>
+                {PRIORITY_LABELS[priority]}
+              </ThemedText>
+              <View
+                style={[styles.priorityCountBadge, { backgroundColor: hexToRgba(priorityAccent[priority], 0.12) }]}
+              >
+                <ThemedText style={[styles.priorityCount, { color: priorityAccent[priority] }]}>
+                  {groupedTasks[priority].length}
                 </ThemedText>
               </View>
-              <ThemedText style={styles.priorityCount}>
-                {groupedTasks[priority].length}
-              </ThemedText>
             </View>
 
             {groupedTasks[priority].length === 0 ? (
@@ -185,12 +199,31 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
               groupedTasks[priority].map((task) => (
                 <Pressable
                   key={task.id}
-                  style={[styles.taskItem, task.completed && styles.taskItemCompleted]}
+                  style={[
+                    styles.taskItem,
+                    {
+                      backgroundColor: getTaskBackground(priority, task.completed),
+                      borderColor: hexToRgba(priorityAccent[priority], 0.18),
+                    },
+                    task.completed && styles.taskItemCompleted,
+                  ]}
                   onPress={() => onToggleTask(project.id, task.id)}
                   accessibilityRole="button"
                   accessibilityLabel={`${task.title} görevini ${task.completed ? 'geri al' : 'tamamla'}`}
                 >
-                  <View style={[styles.taskStatus, task.completed && { backgroundColor: successColor }]}> 
+                  <View
+                    style={[
+                      styles.taskStatus,
+                      {
+                        borderColor: task.completed
+                          ? 'transparent'
+                          : hexToRgba(priorityAccent[priority], 0.6),
+                        backgroundColor: task.completed
+                          ? successColor
+                          : hexToRgba(priorityAccent[priority], 0.2),
+                      },
+                    ]}
+                  >
                     {task.completed && (
                       <IconSymbol name="checkmark" size={14} color="white" />
                     )}
@@ -222,6 +255,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       </View>
     </Card>
   );
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+  if (!hex) return `rgba(0,0,0,${alpha})`;
+  const normalized = hex.replace('#', '');
+  const bigint = Number.parseInt(normalized.length === 3 ? normalized.repeat(2) : normalized, 16);
+  if (Number.isNaN(bigint)) return `rgba(0,0,0,${alpha})`;
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
 const styles = StyleSheet.create({
@@ -320,23 +364,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
   },
+  taskGroupsStacked: {
+    flexDirection: 'column',
+  },
   priorityColumn: {
     flex: 1,
     gap: 12,
+  },
+  priorityColumnStacked: {
+    width: '100%',
   },
   priorityHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  priorityBadge: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
   priorityLabel: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  priorityCountBadge: {
+    minWidth: 26,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   priorityCount: {
     fontSize: 13,
@@ -350,17 +404,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(0,0,0,0.08)',
-    backgroundColor: 'rgba(0,0,0,0.03)',
   },
   taskItemCompleted: {
-    backgroundColor: 'rgba(76,217,100,0.12)',
+    opacity: 0.9,
   },
   taskStatus: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -165,6 +165,53 @@ const getDefaultBlockForm = () => ({
   note: '',
 });
 
+const sanitizeTask = (task: Task): Task => ({
+  ...task,
+  title: task.title.trim(),
+  description: task.description?.trim() || undefined,
+});
+
+const sanitizeResource = (resource: ResourceItem): ResourceItem => ({
+  ...resource,
+  title: resource.title.trim(),
+  url: resource.type === 'link' ? resource.url.trim() : '',
+  note: resource.type === 'note' ? resource.note?.trim() || undefined : undefined,
+});
+
+const sanitizeProject = (project: ProjectWithResources): ProjectWithResources => ({
+  ...project,
+  title: project.title.trim(),
+  description: project.description?.trim() || undefined,
+  tasks: project.tasks
+    .filter((task) => task.title?.trim())
+    .map((task) => sanitizeTask(task)),
+  resources: project.resources
+    .filter((resource) => resource.title?.trim())
+    .map(sanitizeResource),
+});
+
+const sanitizeProjects = (projects: ProjectWithResources[]) =>
+  projects
+    .filter((project) => project.title?.trim())
+    .map(sanitizeProject);
+
+const sanitizeBlock = (block: FocusBlock): FocusBlock | null => {
+  const title = block.title.trim();
+  if (!title) return null;
+
+  return {
+    ...block,
+    title,
+    note: block.note?.trim() || undefined,
+    taskIds: Array.from(new Set(block.taskIds.filter(Boolean))),
+  };
+};
+
+const sanitizeBlocks = (blocks: FocusBlock[]) =>
+  blocks
+    .map(sanitizeBlock)
+    .filter((block): block is FocusBlock => block !== null);
+
 interface FormModalProps {
   visible: boolean;
   title: string;
@@ -219,8 +266,12 @@ export default function HomeScreen() {
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
 
-  const [projects, setProjects] = React.useState<ProjectWithResources[]>(createInitialProjects);
-  const [blocks, setBlocks] = React.useState<FocusBlock[]>(createInitialBlocks);
+  const [projects, setProjects] = React.useState<ProjectWithResources[]>(() =>
+    sanitizeProjects(createInitialProjects()),
+  );
+  const [blocks, setBlocks] = React.useState<FocusBlock[]>(() =>
+    sanitizeBlocks(createInitialBlocks()),
+  );
 
   const [projectModalVisible, setProjectModalVisible] = React.useState(false);
   const [projectForm, setProjectForm] = React.useState({ title: '', description: '' });
@@ -286,7 +337,7 @@ export default function HomeScreen() {
       resources: [],
     };
 
-    setProjects((prev) => [newProject, ...prev]);
+    setProjects((prev) => sanitizeProjects([newProject, ...prev]));
     setProjectModalVisible(false);
   }, [projectForm.description, projectForm.title]);
 
@@ -320,10 +371,12 @@ export default function HomeScreen() {
     };
 
     setProjects((prev) =>
-      prev.map((project) =>
-        project.id === taskModalState.projectId
-          ? { ...project, tasks: [newTask, ...project.tasks] }
-          : project,
+      sanitizeProjects(
+        prev.map((project) =>
+          project.id === taskModalState.projectId
+            ? { ...project, tasks: [newTask, ...project.tasks] }
+            : project,
+        ),
       ),
     );
 
@@ -332,36 +385,42 @@ export default function HomeScreen() {
 
   const handleToggleTask = React.useCallback((projectId: string, taskId: string) => {
     setProjects((prev) =>
-      prev.map((project) =>
-        project.id !== projectId
-          ? project
-          : {
-              ...project,
-              tasks: project.tasks.map((task) =>
-                task.id === taskId ? { ...task, completed: !task.completed } : task,
-              ),
-            },
+      sanitizeProjects(
+        prev.map((project) =>
+          project.id !== projectId
+            ? project
+            : {
+                ...project,
+                tasks: project.tasks.map((task) =>
+                  task.id === taskId ? { ...task, completed: !task.completed } : task,
+                ),
+              },
+        ),
       ),
     );
   }, []);
 
   const handleDeleteTask = React.useCallback((projectId: string, taskId: string) => {
     setProjects((prev) =>
-      prev.map((project) =>
-        project.id !== projectId
-          ? project
-          : {
-              ...project,
-              tasks: project.tasks.filter((task) => task.id !== taskId),
-            },
+      sanitizeProjects(
+        prev.map((project) =>
+          project.id !== projectId
+            ? project
+            : {
+                ...project,
+                tasks: project.tasks.filter((task) => task.id !== taskId),
+              },
+        ),
       ),
     );
 
     setBlocks((prev) =>
-      prev.map((block) =>
-        block.taskIds.includes(taskId)
-          ? { ...block, taskIds: block.taskIds.filter((id) => id !== taskId) }
-          : block,
+      sanitizeBlocks(
+        prev.map((block) =>
+          block.taskIds.includes(taskId)
+            ? { ...block, taskIds: block.taskIds.filter((id) => id !== taskId) }
+            : block,
+        ),
       ),
     );
   }, []);
@@ -375,14 +434,16 @@ export default function HomeScreen() {
 
       if (taskIdsToRemove.size > 0) {
         setBlocks((prevBlocks) =>
-          prevBlocks.map((block) => ({
-            ...block,
-            taskIds: block.taskIds.filter((taskId) => !taskIdsToRemove.has(taskId)),
-          })),
+          sanitizeBlocks(
+            prevBlocks.map((block) => ({
+              ...block,
+              taskIds: block.taskIds.filter((taskId) => !taskIdsToRemove.has(taskId)),
+            })),
+          ),
         );
       }
 
-      return prevProjects.filter((project) => project.id !== projectId);
+      return sanitizeProjects(prevProjects.filter((project) => project.id !== projectId));
     });
   }, []);
 
@@ -419,10 +480,12 @@ export default function HomeScreen() {
     };
 
     setProjects((prev) =>
-      prev.map((project) =>
-        project.id === resourceModalState.projectId
-          ? { ...project, resources: [resource, ...project.resources] }
-          : project,
+      sanitizeProjects(
+        prev.map((project) =>
+          project.id === resourceModalState.projectId
+            ? { ...project, resources: [resource, ...project.resources] }
+            : project,
+        ),
       ),
     );
 
@@ -431,13 +494,15 @@ export default function HomeScreen() {
 
   const handleDeleteResource = React.useCallback((projectId: string, resourceId: string) => {
     setProjects((prev) =>
-      prev.map((project) =>
-        project.id !== projectId
-          ? project
-          : {
-              ...project,
-              resources: project.resources.filter((resource) => resource.id !== resourceId),
-            },
+      sanitizeProjects(
+        prev.map((project) =>
+          project.id !== projectId
+            ? project
+            : {
+                ...project,
+                resources: project.resources.filter((resource) => resource.id !== resourceId),
+              },
+        ),
       ),
     );
   }, []);
@@ -469,12 +534,12 @@ export default function HomeScreen() {
       note: blockForm.note.trim() ? blockForm.note.trim() : undefined,
     };
 
-    setBlocks((prev) => [...prev, newBlock]);
+    setBlocks((prev) => sanitizeBlocks([...prev, newBlock]));
     setBlockModalVisible(false);
   }, [blockForm.date, blockForm.endTime, blockForm.note, blockForm.startTime, blockForm.title]);
 
   const handleDeleteBlock = React.useCallback((blockId: string) => {
-    setBlocks((prev) => prev.filter((block) => block.id !== blockId));
+    setBlocks((prev) => sanitizeBlocks(prev.filter((block) => block.id !== blockId)));
   }, []);
 
   const openAssignmentModal = React.useCallback((blockId: string) => {
@@ -508,8 +573,10 @@ export default function HomeScreen() {
     const selectedIds = Array.from(assignmentModal.selected);
 
     setBlocks((prev) =>
-      prev.map((block) =>
-        block.id === assignmentModal.blockId ? { ...block, taskIds: selectedIds } : block,
+      sanitizeBlocks(
+        prev.map((block) =>
+          block.id === assignmentModal.blockId ? { ...block, taskIds: selectedIds } : block,
+        ),
       ),
     );
 
