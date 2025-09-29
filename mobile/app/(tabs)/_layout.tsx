@@ -1,9 +1,9 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -21,28 +21,36 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="home-variant-outline" size={size ?? 24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="timer"
         options={{
           title: 'Timer',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="timer" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="timer-outline" size={size ?? 24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="habits"
         options={{
           title: 'Habits',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="checkmark.circle" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="check-circle-outline" size={size ?? 24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="soundscapes"
         options={{
           title: 'Sounds',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="waveform" color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="music-note-outline" size={size ?? 24} color={color} />
+          ),
         }}
       />
       {Platform.OS !== 'ios' && Platform.OS !== 'android' && (
@@ -50,7 +58,9 @@ export default function TabLayout() {
           name="blocker"
           options={{
             title: 'Blocker',
-            tabBarIcon: ({ color }) => <IconSymbol size={24} name="shield" color={color} />,
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="shield-check-outline" size={size ?? 24} color={color} />
+            ),
           }}
         />
       )}
@@ -58,7 +68,9 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="gear" color={color} />,
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="cog-outline" size={size ?? 24} color={color} />
+            ),
         }}
       />
     </Tabs>
