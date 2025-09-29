@@ -343,7 +343,7 @@ Tüm metin öğeleri Dynamic Type'ı destekleyecek ve kullanıcının sistem aya
 
 ### Asset Optimizasyonu
 - SF Symbols tercih edilecek
-- Vector graphics (PDF/SVG)
+- Vector graphics (SVG)
 - @2x ve @3x image setleri
 - Lazy loading implementasyonu
 
