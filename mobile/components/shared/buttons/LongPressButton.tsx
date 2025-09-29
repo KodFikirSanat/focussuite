@@ -1,9 +1,9 @@
-import React, { useRef } from 'react';
-import { Pressable, StyleSheet, View, Animated } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { GestureProps, BaseComponentProps } from '@/types';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { BaseComponentProps, GestureProps } from '@/types';
+import * as Haptics from 'expo-haptics';
+import React, { useRef } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 interface LongPressButtonProps extends BaseComponentProps, GestureProps {
   title?: string;
@@ -13,6 +13,7 @@ interface LongPressButtonProps extends BaseComponentProps, GestureProps {
   longPressDuration?: number;
   showProgress?: boolean;
   children?: React.ReactNode;
+  disabled?: boolean;
 }
 
 export const LongPressButton: React.FC<LongPressButtonProps> = ({
@@ -26,16 +27,20 @@ export const LongPressButton: React.FC<LongPressButtonProps> = ({
   showProgress = true,
   children,
   style,
+  disabled = false,
   ...rest
 }) => {
   const progressAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const tintColor = useThemeColor({}, 'tint');
   const backgroundColor = useThemeColor({}, 'background');
 
   const handlePressIn = () => {
+    if (disabled) {
+      return;
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     // Scale animation
@@ -80,11 +85,17 @@ export const LongPressButton: React.FC<LongPressButtonProps> = ({
   };
 
   const handlePress = () => {
+    if (disabled) {
+      return;
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress?.();
   };
 
   const handleLongPress = () => {
+    if (disabled) {
+      return;
+    }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     onLongPress?.();
     onLongPressComplete?.();
@@ -99,12 +110,18 @@ export const LongPressButton: React.FC<LongPressButtonProps> = ({
   return (
     <Animated.View style={[{ transform: [{ scale: scaleAnim }] }]}>
       <Pressable
-        style={[styles.container, { backgroundColor }, style]}
+        style={[
+          styles.container,
+          { backgroundColor },
+          disabled && styles.disabled,
+          style,
+        ]}
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessibilityRole="button"
         accessibilityHint="Long press for additional action"
+        disabled={disabled}
         {...rest}
       >
         {showProgress && (
@@ -143,6 +160,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(0,0,0,0.1)',
+  },
+  disabled: {
+    opacity: 0.5,
   },
   progressBar: {
     position: 'absolute',

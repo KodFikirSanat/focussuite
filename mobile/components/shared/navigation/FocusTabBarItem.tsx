@@ -1,10 +1,10 @@
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/components/themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { Route } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { ThemedText } from '@/components/themed-text';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import React from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 interface FocusTabBarItemProps {
   route: Route<string>;
@@ -41,7 +41,6 @@ export const FocusTabBarItem: React.FC<FocusTabBarItemProps> = ({
       accessibilityRole="button"
       accessibilityState={isFocused ? { selected: true } : {}}
       accessibilityLabel={options.tabBarAccessibilityLabel}
-      testID={options.tabBarTestID}
       onPress={handlePress}
       onLongPress={handleLongPress}
       style={({ pressed }) => [

@@ -1,17 +1,9 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native';
-import Animated, {
-  useAnimatedGestureHandler,
-  useAnimatedStyle,
-  useSharedValue,
-  runOnJS,
-  interpolate,
-  extrapolate,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { BaseComponentProps } from '@/types';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { BaseComponentProps } from '@/types';
+import * as Haptics from 'expo-haptics';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { Animated, PanResponder, StyleSheet, View } from 'react-native';
 
 interface SliderProps extends BaseComponentProps {
   value: number;
@@ -40,89 +32,152 @@ export const Slider: React.FC<SliderProps> = ({
   trackHeight = 4,
   thumbSize = 24,
   style,
-  ...rest
+  lightColor,
+  darkColor,
 }) => {
   const [sliderWidth, setSliderWidth] = useState(0);
-  const translateX = useSharedValue(0);
-  const isDragging = useSharedValue(false);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const translateXValueRef = useRef(0);
+  const startXRef = useRef(0);
 
   const tintColor = useThemeColor({}, 'tint');
-  const backgroundColor = useThemeColor({}, 'background');
+  const trackBaseColor = useThemeColor(
+    { light: lightColor ?? 'rgba(0,0,0,0.1)', dark: darkColor ?? 'rgba(255,255,255,0.2)' },
+    'background'
+  );
 
-  const calculateValue = (position: number) => {
-    'worklet';
-    const percentage = Math.max(0, Math.min(1, position / sliderWidth));
-    const rawValue = minimumValue + percentage * (maximumValue - minimumValue);
-    return Math.round(rawValue / step) * step;
-  };
+  const setTranslateX = useCallback(
+    (position: number) => {
+      translateXValueRef.current = position;
+      translateX.setValue(position);
+    },
+    [translateX]
+  );
 
-  const calculatePosition = (val: number) => {
-    'worklet';
-    const percentage = (val - minimumValue) / (maximumValue - minimumValue);
-    return percentage * sliderWidth;
-  };
+  const calculateValue = useCallback(
+    (position: number) => {
+      if (sliderWidth <= 0) {
+        return value;
+      }
+      const percentage = Math.max(0, Math.min(1, position / sliderWidth));
+      const rawValue = minimumValue + percentage * (maximumValue - minimumValue);
+      return Math.round(rawValue / step) * step;
+    },
+    [sliderWidth, value, minimumValue, maximumValue, step]
+  );
 
-  const updateValue = (newValue: number) => {
-    if (newValue !== value) {
-      onValueChange(Math.max(minimumValue, Math.min(maximumValue, newValue)));
-    }
-  };
+  const calculatePosition = useCallback(
+    (val: number) => {
+      if (sliderWidth <= 0) {
+        return 0;
+      }
+      const percentage = (val - minimumValue) / (maximumValue - minimumValue);
+      return percentage * sliderWidth;
+    },
+    [sliderWidth, minimumValue, maximumValue]
+  );
 
-  const hapticFeedback = () => {
+  const updateValue = useCallback(
+    (newValue: number) => {
+      if (newValue !== value) {
+        onValueChange(Math.max(minimumValue, Math.min(maximumValue, newValue)));
+      }
+    },
+    [value, onValueChange, minimumValue, maximumValue]
+  );
+
+  const hapticFeedback = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
+  }, []);
 
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent>({
-    onStart: () => {
-      isDragging.value = true;
-      runOnJS(hapticFeedback)();
+  const clampPosition = useCallback(
+    (position: number) => {
+      if (position < 0) return 0;
+      if (sliderWidth <= 0) return 0;
+      if (position > sliderWidth) return sliderWidth;
+      return position;
     },
-    onActive: (event) => {
-      const newPosition = Math.max(0, Math.min(sliderWidth, event.x));
-      translateX.value = newPosition;
-      const newValue = calculateValue(newPosition);
-      runOnJS(updateValue)(newValue);
-    },
-    onEnd: () => {
-      isDragging.value = false;
-      const finalPosition = calculatePosition(value);
-      translateX.value = finalPosition;
-    },
-  });
+    [sliderWidth]
+  );
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => !disabled,
+        onMoveShouldSetPanResponder: () => !disabled,
+        onPanResponderGrant: () => {
+          if (disabled) return;
+          startXRef.current = translateXValueRef.current;
+          hapticFeedback();
+          Animated.spring(scaleAnim, {
+            toValue: 1.15,
+            useNativeDriver: true,
+          }).start();
+        },
+        onPanResponderMove: (_, gestureState) => {
+          if (disabled) return;
+          const newPosition = clampPosition(startXRef.current + gestureState.dx);
+          setTranslateX(newPosition);
+          const newValue = calculateValue(newPosition);
+          updateValue(newValue);
+        },
+        onPanResponderRelease: () => {
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+          }).start();
+          const finalPosition = calculatePosition(value);
+          setTranslateX(finalPosition);
+        },
+        onPanResponderTerminationRequest: () => true,
+        onPanResponderTerminate: () => {
+          Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+          }).start();
+          const finalPosition = calculatePosition(value);
+          setTranslateX(finalPosition);
+        },
+      }),
+    [
+      disabled,
+      clampPosition,
+      calculateValue,
+      calculatePosition,
+      hapticFeedback,
+      scaleAnim,
+      setTranslateX,
+      updateValue,
+      value,
+    ]
+  );
 
   React.useEffect(() => {
     if (sliderWidth > 0) {
       const position = calculatePosition(value);
-      translateX.value = position;
+      setTranslateX(position);
     }
-  }, [value, sliderWidth, minimumValue, maximumValue]);
+  }, [calculatePosition, setTranslateX, sliderWidth, value]);
 
-  const thumbStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value - thumbSize / 2 }],
-      opacity: disabled ? 0.5 : 1,
-    };
-  });
+  const activeTrackStyle = {
+    height: trackHeight,
+    backgroundColor: disabled ? 'rgba(0,0,0,0.2)' : tintColor,
+    width: translateX,
+  };
 
-  const activeTrackStyle = useAnimatedStyle(() => {
-    return {
-      width: translateX.value,
-    };
-  });
-
-  const thumbScaleStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: translateX.value - thumbSize / 2 },
-        { scale: isDragging.value ? 1.2 : 1 },
-      ],
-    };
-  });
+  const thumbAnimatedStyle = {
+    transform: [
+      { translateX: Animated.subtract(translateX, thumbSize / 2) },
+      { scale: scaleAnim },
+    ],
+    opacity: disabled ? 0.5 : 1,
+  };
 
   const displayValue = formatValue ? formatValue(value) : value.toString();
 
   return (
-    <View style={[styles.container, style]}>
+  <View style={[styles.container, style]}>
       {(label || showValue) && (
         <View style={styles.headerContainer}>
           {label && (
@@ -147,36 +202,28 @@ export const Slider: React.FC<SliderProps> = ({
             styles.track,
             {
               height: trackHeight,
-              backgroundColor: 'rgba(0,0,0,0.1)',
+              backgroundColor: trackBaseColor,
             },
           ]}
         />
 
         <Animated.View
-          style={[
-            styles.activeTrack,
-            {
-              height: trackHeight,
-              backgroundColor: disabled ? 'rgba(0,0,0,0.2)' : tintColor,
-            },
-            activeTrackStyle,
-          ]}
+          style={[styles.activeTrack, activeTrackStyle]}
         />
 
-        <PanGestureHandler onGestureEvent={gestureHandler} enabled={!disabled}>
-          <Animated.View
-            style={[
-              styles.thumb,
-              {
-                width: thumbSize,
-                height: thumbSize,
-                borderRadius: thumbSize / 2,
-                backgroundColor: disabled ? 'rgba(0,0,0,0.3)' : tintColor,
-              },
-              thumbScaleStyle,
-            ]}
-          />
-        </PanGestureHandler>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.thumb,
+            {
+              width: thumbSize,
+              height: thumbSize,
+              borderRadius: thumbSize / 2,
+              backgroundColor: disabled ? 'rgba(0,0,0,0.3)' : tintColor,
+            },
+            thumbAnimatedStyle,
+          ]}
+        />
       </View>
     </View>
   );

@@ -1,5 +1,4 @@
-import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import type { NavigationProp, RouteProp } from '@react-navigation/native';
 
 // Root Stack Navigator Types
 export type RootStackParamList = {
@@ -17,10 +16,10 @@ export type RootStackParamList = {
 
 // Tab Navigator Types
 export type TabParamList = {
+  home: undefined;
   timer: undefined;
   habits: undefined;
   soundscapes: undefined;
-  todo: undefined;
   blocker: undefined; // Desktop only
   settings: undefined;
 };
@@ -81,14 +80,14 @@ export type OnboardingStackParamList = {
 };
 
 // Navigation prop types for screens
-export type RootStackNavigationProp = StackNavigationProp<RootStackParamList>;
-export type TimerNavigationProp = StackNavigationProp<TimerStackParamList>;
-export type HabitsNavigationProp = StackNavigationProp<HabitsStackParamList>;
-export type SoundscapesNavigationProp = StackNavigationProp<SoundscapesStackParamList>;
-export type TodoNavigationProp = StackNavigationProp<TodoStackParamList>;
-export type BlockerNavigationProp = StackNavigationProp<BlockerStackParamList>;
-export type SettingsNavigationProp = StackNavigationProp<SettingsStackParamList>;
-export type OnboardingNavigationProp = StackNavigationProp<OnboardingStackParamList>;
+export type RootStackNavigationProp = NavigationProp<RootStackParamList>;
+export type TimerNavigationProp = NavigationProp<TimerStackParamList>;
+export type HabitsNavigationProp = NavigationProp<HabitsStackParamList>;
+export type SoundscapesNavigationProp = NavigationProp<SoundscapesStackParamList>;
+export type TodoNavigationProp = NavigationProp<TodoStackParamList>;
+export type BlockerNavigationProp = NavigationProp<BlockerStackParamList>;
+export type SettingsNavigationProp = NavigationProp<SettingsStackParamList>;
+export type OnboardingNavigationProp = NavigationProp<OnboardingStackParamList>;
 
 // Route prop types
 export type HabitDetailRouteProp = RouteProp<HabitsStackParamList, 'habit-detail'>;
