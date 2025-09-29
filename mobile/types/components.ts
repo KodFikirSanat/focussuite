@@ -1,11 +1,11 @@
 import { ReactNode } from 'react';
-import { ViewStyle, TextStyle, PressableProps, ViewProps } from 'react-native';
+import { PressableProps, StyleProp, TextStyle, ViewProps, ViewStyle } from 'react-native';
 
 // Base component props that extend themed functionality
 export interface BaseComponentProps {
   lightColor?: string;
   darkColor?: string;
-  style?: ViewStyle | TextStyle;
+  style?: StyleProp<ViewStyle>;
   children?: ReactNode;
 }
 
@@ -16,7 +16,7 @@ export type ThemeVariant = 'primary' | 'secondary' | 'tertiary' | 'danger' | 'wa
 export type SizeVariant = 'small' | 'medium' | 'large';
 
 // Button base props
-export interface BaseButtonProps extends PressableProps, BaseComponentProps {
+export interface BaseButtonProps extends Omit<PressableProps, 'style' | 'children'>, BaseComponentProps {
   variant?: ThemeVariant;
   size?: SizeVariant;
   disabled?: boolean;
@@ -34,7 +34,7 @@ export interface BaseInputProps extends BaseComponentProps {
 }
 
 // Card component props
-export interface BaseCardProps extends ViewProps, BaseComponentProps {
+export interface BaseCardProps extends Omit<ViewProps, 'style' | 'children'>, BaseComponentProps {
   elevation?: number;
   radius?: number;
   padding?: number;
