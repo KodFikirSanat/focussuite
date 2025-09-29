@@ -45,13 +45,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={24} name="waveform" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="todo"
-        options={{
-          title: 'Tasks',
-          tabBarIcon: ({ color }) => <IconSymbol size={24} name="list.bullet" color={color} />,
-        }}
-      />
       {Platform.OS !== 'ios' && Platform.OS !== 'android' && (
         <Tabs.Screen
           name="blocker"
