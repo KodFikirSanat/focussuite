@@ -1,8 +1,10 @@
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { BaseButtonProps } from '@/types';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { IconButton as PaperIconButton } from 'react-native-paper';
+
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { BaseButtonProps, SizeVariant } from '@/types';
 
 interface IconButtonProps extends BaseButtonProps {
   icon: React.ReactNode;
@@ -11,6 +13,18 @@ interface IconButtonProps extends BaseButtonProps {
   circular?: boolean;
   backgroundColor?: string;
 }
+
+const ICON_SIZES: Record<SizeVariant, number> = {
+  small: 18,
+  medium: 24,
+  large: 28,
+};
+
+const CONTAINER_SIZES: Record<SizeVariant, number> = {
+  small: 36,
+  medium: 44,
+  large: 56,
+};
 
 export const IconButton: React.FC<IconButtonProps> = ({
   icon,
@@ -23,7 +37,8 @@ export const IconButton: React.FC<IconButtonProps> = ({
   style,
   ...rest
 }) => {
-  const defaultBackgroundColor = useThemeColor({}, 'background');
+  const defaultBackgroundColor = useThemeColor({}, 'surface');
+  const tintColor = useThemeColor({}, 'tint');
 
   const handlePress = () => {
     if (disabled) return;
@@ -32,45 +47,46 @@ export const IconButton: React.FC<IconButtonProps> = ({
     onPress();
   };
 
-  const getButtonStyle = () => {
-    const baseStyle = styles.button;
-    const sizeStyle = styles[`size_${size}`];
-    const shapeStyle = circular ? styles.circular : styles.rounded;
-
-    return [
-      baseStyle,
-      sizeStyle,
-      shapeStyle,
-      { backgroundColor: backgroundColor || defaultBackgroundColor },
-      disabled && styles.disabled,
-      style,
-    ];
-  };
+  const renderIcon = React.useCallback(
+    (iconProps: { size: number; color: string }) => (
+      <View style={styles.iconContainer}>
+        {React.isValidElement(icon)
+          ? React.cloneElement(
+              icon as React.ReactElement<{ color?: string; size?: number }>,
+              {
+                color: iconProps.color,
+                size: iconProps.size,
+              }
+            )
+          : icon}
+      </View>
+    ),
+    [icon]
+  );
 
   return (
-    <Pressable
-      style={({ pressed }) => [
-        ...getButtonStyle(),
-        pressed && !disabled && styles.pressed,
-      ]}
+    <PaperIconButton
+      icon={renderIcon}
       onPress={handlePress}
       disabled={disabled}
-      accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
-      {...rest}
-    >
-      <View style={styles.iconContainer}>
-        {icon}
-      </View>
-    </Pressable>
+      size={ICON_SIZES[size]}
+      containerColor={backgroundColor || defaultBackgroundColor}
+      rippleColor={tintColor}
+      style={[
+        styles.button,
+        styles[`size_${size}`],
+        circular ? styles.circular : styles.rounded,
+        style,
+      ]}
+      {...(rest as Partial<React.ComponentProps<typeof PaperIconButton>>)}
+    />
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(0,0,0,0.1)',
   },
@@ -93,15 +109,15 @@ const styles = StyleSheet.create({
   },
   // Size variants
   size_small: {
-    width: 32,
-    height: 32,
+    width: CONTAINER_SIZES.small,
+    height: CONTAINER_SIZES.small,
   },
   size_medium: {
-    width: 44,
-    height: 44,
+    width: CONTAINER_SIZES.medium,
+    height: CONTAINER_SIZES.medium,
   },
   size_large: {
-    width: 56,
-    height: 56,
+    width: CONTAINER_SIZES.large,
+    height: CONTAINER_SIZES.large,
   },
 });

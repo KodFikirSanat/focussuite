@@ -3,19 +3,44 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
+import type { MD3Theme } from 'react-native-paper';
+
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAppTheme } from '@/hooks/use-app-theme';
+
+const PAPER_COLOR_MAP: Partial<Record<keyof typeof Colors.light, keyof MD3Theme['colors']>> = {
+  text: 'onSurface',
+  background: 'background',
+  tint: 'primary',
+  icon: 'onSurfaceVariant',
+  tabIconDefault: 'onSurfaceVariant',
+  tabIconSelected: 'primary',
+  secondary: 'secondary',
+  tertiary: 'tertiary',
+  onTint: 'onPrimary',
+  onSecondary: 'onSecondary',
+  onTertiary: 'onTertiary',
+  surface: 'surface',
+};
 
 export function useThemeColor(
   props: { light?: string; dark?: string },
   colorName: keyof typeof Colors.light & keyof typeof Colors.dark
 ) {
-  const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+  const { colorScheme, paperTheme } = useAppTheme();
+  const colorFromProps = props[colorScheme];
 
   if (colorFromProps) {
     return colorFromProps;
   } else {
-    return Colors[theme][colorName];
+    const mappedKey = PAPER_COLOR_MAP[colorName];
+    if (mappedKey) {
+      const mappedColor = paperTheme.colors[mappedKey];
+      if (typeof mappedColor === 'string') {
+        return mappedColor;
+      }
+    }
+
+    return Colors[colorScheme][colorName];
   }
 }

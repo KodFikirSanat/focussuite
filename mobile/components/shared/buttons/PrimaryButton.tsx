@@ -1,8 +1,8 @@
 import * as Haptics from 'expo-haptics';
-import React from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native';
+import { Button } from 'react-native-paper';
 
-import { ThemedText } from '@/components/themed-text';
 import { Colors } from '@/constants/theme';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { BaseButtonProps, ThemeVariant } from '@/types';
@@ -46,8 +46,10 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   style,
   ...rest
 }) => {
-  const backgroundColor = useThemeColor({}, VARIANT_BACKGROUND_COLOR[variant] ?? 'tint');
-  const textColor = useThemeColor({}, VARIANT_TEXT_COLOR[variant] ?? 'onTint');
+  const backgroundKey = VARIANT_BACKGROUND_COLOR[variant];
+  const textKey = VARIANT_TEXT_COLOR[variant];
+  const backgroundColor: string = useThemeColor({}, backgroundKey);
+  const textColor: string = useThemeColor({}, textKey);
 
   const handlePress = () => {
     if (disabled || loading) return;
@@ -55,113 +57,90 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onPress();
   };
+  const contentStyle = useMemo<StyleProp<ViewStyle>>(
+    () => [styles.content, styles[`content_${size}`]],
+    [size]
+  );
 
-  const getButtonStyle = () => {
-    const baseStyle = styles.button;
-    const sizeStyle = styles[`size_${size}`];
-    return [
-      baseStyle,
-      sizeStyle,
-      { backgroundColor },
-      fullWidth && styles.fullWidth,
-      (disabled || loading) && styles.disabled,
-      style,
-    ];
-  };
+  const labelStyle = useMemo<StyleProp<TextStyle>>(
+    () => [styles.label, styles[`label_${size}`], { color: textColor }],
+    [size, textColor]
+  );
 
-  const getTextStyle = () => {
-    const baseStyle = styles.text;
-    const sizeTextStyle = styles[`text_${size}`];
-
-    return [baseStyle, sizeTextStyle, { color: textColor }];
-  };
+  const renderIcon = icon
+    ? (iconProps: { size: number; color: string }) => (
+        <View style={styles.iconContainer}>
+          {React.isValidElement(icon)
+            ? React.cloneElement(
+                icon as React.ReactElement<{ color?: string; size?: number }>,
+                {
+                  color: iconProps.color,
+                  size: iconProps.size,
+                }
+              )
+            : icon}
+        </View>
+      )
+    : undefined;
 
   return (
-    <Pressable
-      style={({ pressed }) => [
-        ...getButtonStyle(),
-        pressed && !disabled && !loading && styles.pressed,
-      ]}
+    <Button
+      mode="contained"
       onPress={handlePress}
       disabled={disabled || loading}
-      accessibilityRole="button"
+      loading={loading}
+      style={[styles.button, fullWidth && styles.fullWidth, style]}
+      contentStyle={contentStyle}
+      labelStyle={labelStyle}
+      buttonColor={backgroundColor}
+      textColor={textColor}
+      icon={renderIcon}
+      uppercase={false}
       accessibilityState={{ disabled: disabled || loading }}
-      {...rest}
+      {...(rest as Partial<React.ComponentProps<typeof Button>>)}
     >
-      <View style={styles.content}>
-        {loading ? (
-          <ActivityIndicator size="small" color={textColor} />
-        ) : (
-          <>
-            {icon && <View style={styles.iconContainer}>{icon}</View>}
-            <ThemedText style={getTextStyle()}>{title}</ThemedText>
-          </>
-        )}
-      </View>
-    </Pressable>
+      {title}
+    </Button>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    marginRight: 8,
-  },
-  text: {
-    color: 'white',
-    fontWeight: '600',
-    textAlign: 'center',
   },
   fullWidth: {
-    width: '100%',
+    alignSelf: 'stretch',
   },
-  pressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+  content: {
+    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  disabled: {
-    opacity: 0.5,
-  },
-  // Size variants
-  size_small: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  content_small: {
     minHeight: 36,
+    paddingHorizontal: 16,
   },
-  size_medium: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+  content_medium: {
     minHeight: 44,
+    paddingHorizontal: 24,
   },
-  size_large: {
-    paddingHorizontal: 32,
-    paddingVertical: 16,
+  content_large: {
     minHeight: 52,
+    paddingHorizontal: 32,
   },
-  // Text size variants
-  text_small: {
+  label: {
+    fontWeight: '600',
+  },
+  label_small: {
     fontSize: 14,
   },
-  text_medium: {
+  label_medium: {
     fontSize: 16,
   },
-  text_large: {
+  label_large: {
     fontSize: 18,
   },
-  // Color variants (using same style for now, TODO: implement different colors)
-  variant_primary: {},
-  variant_secondary: {},
-  variant_tertiary: {},
-  variant_danger: {},
-  variant_warning: {},
-  variant_success: {},
+  iconContainer: {
+    marginRight: 4,
+  },
 });
