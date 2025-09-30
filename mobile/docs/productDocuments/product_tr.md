@@ -41,25 +41,25 @@ Uzaktan/hibrit çalışma ve artan dijital dikkat dağıtıcılarla birlikte, bi
 
 ## Başarı KPI'ları
 
-| KPI | Hedef | Sıklık |
-|-----|--------|--------|
-| Edinim (kayıt sayısı) | 1.000 / ay | Haftalık |
-| Aktivasyon (en az 2 temel özelliği kullanan %) | %40 | Haftalık |
-| Saklama (30 gün) | %25 | Aylık |
-| Gelir / Dönüşüm Oranı | MVP'de geçerli değil (sonra planlandı) | Aylık |
-| Kullanıcı Geri Bildirim Puanı (NPS) | >40 | Aylık |
+| KPI                                            | Hedef                                  | Sıklık   |
+| ---------------------------------------------- | -------------------------------------- | -------- |
+| Edinim (kayıt sayısı)                          | 1.000 / ay                             | Haftalık |
+| Aktivasyon (en az 2 temel özelliği kullanan %) | %40                                    | Haftalık |
+| Saklama (30 gün)                               | %25                                    | Aylık    |
+| Gelir / Dönüşüm Oranı                          | MVP'de geçerli değil (sonra planlandı) | Aylık    |
+| Kullanıcı Geri Bildirim Puanı (NPS)            | >40                                    | Aylık    |
 
 ## Birikim Görüntüsü
 
-| Öğe | Öncelik | Durum |
-|------|---------|-------|
-| Pomodoro Zamanlayıcı | Yüksek | Devam Ediyor |
-| Alışkanlık Takipçisi | Yüksek | Devam Ediyor |
-| Uygulama Engelleyici | Yüksek | Beklemede |
-| Ses Oynatıcı | Orta | Beklemede |
-| Yapılacaklar Listesi | Yüksek | Beklemede |
-| Bulut Senkronizasyonu | Yüksek | Beklemede |
-| Hata Düzeltmeleri (Genel) | Yüksek | Devam Eden |
+| Öğe                       | Öncelik | Durum        |
+| ------------------------- | ------- | ------------ |
+| Pomodoro Zamanlayıcı      | Yüksek  | Devam Ediyor |
+| Alışkanlık Takipçisi      | Yüksek  | Devam Ediyor |
+| Uygulama Engelleyici      | Yüksek  | Beklemede    |
+| Ses Oynatıcı              | Orta    | Beklemede    |
+| Yapılacaklar Listesi      | Yüksek  | Beklemede    |
+| Bulut Senkronizasyonu     | Yüksek  | Beklemede    |
+| Hata Düzeltmeleri (Genel) | Yüksek  | Devam Eden   |
 
 ## Riskler ve Varsayımlar
 
@@ -75,10 +75,10 @@ Uzaktan/hibrit çalışma ve artan dijital dikkat dağıtıcılarla birlikte, bi
 
 ## Karar Kapısı
 
-| Soru | Evet/Hayır |
-|------|------------|
+| Soru                                  | Evet/Hayır   |
+| ------------------------------------- | ------------ |
 | Pazar çekimi hedefleri karşılıyor mu? | Belirlenecek |
-| Birim ekonomi sürdürülebilir mi? | Belirlenecek |
-| Teknik ölçeklenebilirlik uygun mu? | Belirlenecek |
+| Birim ekonomi sürdürülebilir mi?      | Belirlenecek |
+| Teknik ölçeklenebilirlik uygun mu?    | Belirlenecek |
 
 **Karar**: Devam Et / Yinele (erken çekime dayalı)
