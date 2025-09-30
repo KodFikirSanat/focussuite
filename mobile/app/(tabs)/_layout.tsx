@@ -4,16 +4,20 @@ import React from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { paperTheme } = useAppTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: paperTheme.colors.primary,
+        tabBarInactiveTintColor: paperTheme.colors.onSurfaceVariant,
+        tabBarStyle: {
+          backgroundColor: paperTheme.colors.surface,
+          borderTopColor: paperTheme.colors.outlineVariant,
+        },
         headerShown: false,
         tabBarButton: HapticTab,
       }}>
