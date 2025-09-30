@@ -2,8 +2,8 @@ import type { Theme as NavigationTheme } from '@react-navigation/native';
 import { useMemo } from 'react';
 import type { MD3Theme } from 'react-native-paper';
 
-import { getNavigationTheme, getPaperTheme } from '@/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { getNavigationTheme, getPaperTheme } from '@/theme';
 
 type Scheme = 'light' | 'dark';
 
