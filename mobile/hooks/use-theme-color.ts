@@ -17,10 +17,16 @@ const PAPER_COLOR_MAP: Partial<Record<keyof typeof Colors.light, keyof MD3Theme[
   tabIconSelected: 'primary',
   secondary: 'secondary',
   tertiary: 'tertiary',
+  danger: 'error',
   onTint: 'onPrimary',
   onSecondary: 'onSecondary',
   onTertiary: 'onTertiary',
+  onDanger: 'onError',
   surface: 'surface',
+  surfaceVariant: 'surfaceVariant',
+  onSurfaceVariant: 'onSurfaceVariant',
+  outline: 'outline',
+  outlineVariant: 'outlineVariant',
 };
 
 export function useThemeColor(

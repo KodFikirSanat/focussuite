@@ -5,64 +5,100 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#007AFF';
-const tintColorDark = '#0A84FF';
+const MD3_COLORS = {
+  light: {
+    primary: '#6750A4',
+    onPrimary: '#FFFFFF',
+    secondary: '#625B71',
+    onSecondary: '#FFFFFF',
+    tertiary: '#7D5260',
+    onTertiary: '#FFFFFF',
+    error: '#B3261E',
+    onError: '#FFFFFF',
+    background: '#FEF7FF',
+    onBackground: '#1C1B1F',
+    surface: '#FFFBFE',
+    onSurface: '#1C1B1F',
+    surfaceVariant: '#E7E0EC',
+    onSurfaceVariant: '#49454F',
+    outline: '#7A757F',
+    outlineVariant: '#CAC4D0',
+  },
+  dark: {
+    primary: '#D0BCFF',
+    onPrimary: '#381E72',
+    secondary: '#CCC2DC',
+    onSecondary: '#332D41',
+    tertiary: '#EFB8C8',
+    onTertiary: '#492532',
+    error: '#F2B8B5',
+    onError: '#601410',
+    background: '#141218',
+    onBackground: '#E6E1E5',
+    surface: '#1C1B1F',
+    onSurface: '#E6E1E5',
+    surfaceVariant: '#49454F',
+    onSurfaceVariant: '#CAC4D0',
+    outline: '#938F99',
+    outlineVariant: '#47464F',
+  },
+};
 
-const secondaryColorLight = '#5856D6';
-const secondaryColorDark = '#5E5CE6';
-
-const successColorLight = '#34C759';
-const successColorDark = '#30D158';
-
-const warningColorLight = '#FF9500';
-const warningColorDark = '#FF9F0A';
-
-const dangerColorLight = '#FF3B30';
-const dangerColorDark = '#FF453A';
-
-const tertiaryColorLight = '#8E8E93';
-const tertiaryColorDark = '#636366';
+const SUPPORTING_COLORS = {
+  successLight: '#3B873E',
+  successDark: '#86EFAC',
+  warningLight: '#E59E3B',
+  warningDark: '#FACC15',
+};
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
-    secondary: secondaryColorLight,
-    tertiary: tertiaryColorLight,
-    success: successColorLight,
-    warning: warningColorLight,
-    danger: dangerColorLight,
-    onTint: '#FFFFFF',
-    onSecondary: '#FFFFFF',
-    onTertiary: '#11181C',
-    onSuccess: '#FFFFFF',
-    onWarning: '#FFFFFF',
-    onDanger: '#FFFFFF',
-    surface: '#F2F2F7',
+    text: MD3_COLORS.light.onSurface,
+    background: MD3_COLORS.light.background,
+    tint: MD3_COLORS.light.primary,
+    icon: MD3_COLORS.light.onSurfaceVariant,
+    tabIconDefault: MD3_COLORS.light.onSurfaceVariant,
+    tabIconSelected: MD3_COLORS.light.primary,
+    secondary: MD3_COLORS.light.secondary,
+    tertiary: MD3_COLORS.light.tertiary,
+    success: SUPPORTING_COLORS.successLight,
+    warning: SUPPORTING_COLORS.warningLight,
+    danger: MD3_COLORS.light.error,
+    onTint: MD3_COLORS.light.onPrimary,
+    onSecondary: MD3_COLORS.light.onSecondary,
+    onTertiary: MD3_COLORS.light.onTertiary,
+    onSuccess: '#0B3D17',
+    onWarning: '#1F1303',
+    onDanger: MD3_COLORS.light.onError,
+    surface: MD3_COLORS.light.surface,
+    surfaceVariant: MD3_COLORS.light.surfaceVariant,
+    onSurfaceVariant: MD3_COLORS.light.onSurfaceVariant,
+    outline: MD3_COLORS.light.outline,
+    outlineVariant: MD3_COLORS.light.outlineVariant,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-    secondary: secondaryColorDark,
-    tertiary: tertiaryColorDark,
-    success: successColorDark,
-    warning: warningColorDark,
-    danger: dangerColorDark,
-    onTint: '#FFFFFF',
-    onSecondary: '#0B0B0D',
-    onTertiary: '#FFFFFF',
-    onSuccess: '#0B0B0D',
-    onWarning: '#0B0B0D',
-    onDanger: '#0B0B0D',
-    surface: '#1C1C1E',
+    text: MD3_COLORS.dark.onSurface,
+    background: MD3_COLORS.dark.background,
+    tint: MD3_COLORS.dark.primary,
+    icon: MD3_COLORS.dark.onSurfaceVariant,
+    tabIconDefault: MD3_COLORS.dark.onSurfaceVariant,
+    tabIconSelected: MD3_COLORS.dark.primary,
+    secondary: MD3_COLORS.dark.secondary,
+    tertiary: MD3_COLORS.dark.tertiary,
+    success: SUPPORTING_COLORS.successDark,
+    warning: SUPPORTING_COLORS.warningDark,
+    danger: MD3_COLORS.dark.error,
+    onTint: MD3_COLORS.dark.onPrimary,
+    onSecondary: MD3_COLORS.dark.onSecondary,
+    onTertiary: MD3_COLORS.dark.onTertiary,
+    onSuccess: '#052912',
+    onWarning: '#231200',
+    onDanger: MD3_COLORS.dark.onError,
+    surface: MD3_COLORS.dark.surface,
+    surfaceVariant: MD3_COLORS.dark.surfaceVariant,
+    onSurfaceVariant: MD3_COLORS.dark.onSurfaceVariant,
+    outline: MD3_COLORS.dark.outline,
+    outlineVariant: MD3_COLORS.dark.outlineVariant,
   },
 };
 
@@ -78,9 +114,9 @@ export const Fonts = Platform.select({
     mono: 'ui-monospace',
   },
   default: {
-    sans: 'normal',
+    sans: 'Roboto',
     serif: 'serif',
-    rounded: 'normal',
+    rounded: 'sans-serif-rounded',
     mono: 'monospace',
   },
   web: {
