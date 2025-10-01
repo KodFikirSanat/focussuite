@@ -1,6 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 
 import {
   TimerControls,
@@ -369,6 +376,79 @@ export default function TimerScreen() {
     breakMinutes,
   ]);
 
+  const pagerPages = React.useMemo(
+    () => [
+      {
+        key: 'task',
+        content: (
+          <ActiveTaskPanel
+            task={activeTask}
+            upcoming={upcomingTasks}
+            onAdvance={handleAdvanceTask}
+          />
+        ),
+      },
+      {
+        key: 'presets',
+        content: (
+          <View style={styles.pageContent}>
+            <TimerPresets
+              presets={PRESET_OPTIONS}
+              selectedPresetId={selectedPresetId}
+              onSelect={handlePresetSelect}
+              style={styles.presetsSection}
+            />
+          </View>
+        ),
+      },
+      {
+        key: 'durations',
+        content: (
+          <View style={[styles.pageContent, styles.pageContentCentered]}>
+            <TimerDurationControls
+              focusMinutes={focusMinutes}
+              breakMinutes={breakMinutes}
+              onChangeFocus={handleFocusDurationChange}
+              onChangeBreak={handleBreakDurationChange}
+              style={styles.durationCard}
+            />
+          </View>
+        ),
+      },
+      {
+        key: 'controls',
+        content: (
+          <View style={[styles.pageContent, styles.controlsPage]}>
+            <ThemedText style={styles.controlsHint}>Akış kontrolü</ThemedText>
+            <TimerControls
+              isRunning={isRunning}
+              onPlayPause={handlePlayPause}
+              onStop={handleStop}
+              onReset={handleReset}
+              onSkip={handleSkip}
+            />
+          </View>
+        ),
+      },
+    ],
+    [
+      activeTask,
+      upcomingTasks,
+      handleAdvanceTask,
+      selectedPresetId,
+      handlePresetSelect,
+      focusMinutes,
+      breakMinutes,
+      handleFocusDurationChange,
+      handleBreakDurationChange,
+      isRunning,
+      handlePlayPause,
+      handleStop,
+      handleReset,
+      handleSkip,
+    ],
+  );
+
   return (
     <SafeAreaWrapper style={styles.safeArea}>
       <View style={styles.wrapper}>
@@ -396,34 +476,7 @@ export default function TimerScreen() {
           </View>
         </View>
 
-        <ActiveTaskPanel
-          task={activeTask}
-          upcoming={upcomingTasks}
-          onAdvance={handleAdvanceTask}
-        />
-
-        <View style={styles.bottomSection}>
-          <TimerPresets
-            presets={PRESET_OPTIONS}
-            selectedPresetId={selectedPresetId}
-            onSelect={handlePresetSelect}
-          />
-
-          <TimerDurationControls
-            focusMinutes={focusMinutes}
-            breakMinutes={breakMinutes}
-            onChangeFocus={handleFocusDurationChange}
-            onChangeBreak={handleBreakDurationChange}
-          />
-
-          <TimerControls
-            isRunning={isRunning}
-            onPlayPause={handlePlayPause}
-            onStop={handleStop}
-            onReset={handleReset}
-            onSkip={handleSkip}
-          />
-        </View>
+        <VerticalPager pages={pagerPages} />
       </View>
 
       <Toast
@@ -450,17 +503,17 @@ const ActiveTaskPanel: React.FC<ActiveTaskPanelProps> = ({ task, upcoming, onAdv
 
   if (!task) {
     return (
-      <Card style={styles.taskCard}>
+      <View style={[styles.taskContent, styles.taskEmpty]}>
         <ThemedText type="subtitle">Görev bulunamadı</ThemedText>
-        <ThemedText style={styles.taskDescription}>
+        <ThemedText style={[styles.taskDescription, styles.taskEmptyText]}>
           Planner bölümünden görev atadığında burada anlık odak öğen görünecek.
         </ThemedText>
-      </Card>
+      </View>
     );
   }
 
   return (
-    <Card style={styles.taskCard}>
+    <View style={styles.taskContent}>
       <View style={styles.taskHeader}>
         <ThemedText style={styles.taskSectionTitle}>Anlık görev</ThemedText>
         <View
@@ -520,9 +573,90 @@ const ActiveTaskPanel: React.FC<ActiveTaskPanelProps> = ({ task, upcoming, onAdv
         variant="primary"
         style={styles.taskAction}
       />
-    </Card>
+    </View>
   );
 };
+
+interface PagerPage {
+  key: string;
+  content: React.ReactNode;
+}
+
+interface VerticalPagerProps {
+  pages: PagerPage[];
+}
+
+const VerticalPager: React.FC<VerticalPagerProps> = ({ pages }) => {
+  const [containerHeight, setContainerHeight] = React.useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+
+  const inactiveDotColor = useThemeColor({}, 'outlineVariant');
+  const activeDotColor = useThemeColor({}, 'tint');
+
+  const handleLayout = React.useCallback((event: LayoutChangeEvent) => {
+    setContainerHeight(event.nativeEvent.layout.height);
+  }, []);
+
+  const handleMomentumScrollEnd = React.useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!containerHeight || containerHeight === 0) return;
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / containerHeight);
+      setActiveIndex(Math.max(0, Math.min(pages.length - 1, index)));
+    },
+    [containerHeight, pages.length],
+  );
+
+  return (
+    <View style={styles.pagerContainer} onLayout={handleLayout}>
+      <FlatList
+        data={pages}
+        keyExtractor={(item) => item.key}
+        style={styles.pagerList}
+        contentContainerStyle={styles.pagerContentContainer}
+        renderItem={({ item }) => (
+          <View
+            style={[
+              styles.pagerItem,
+              containerHeight ? { height: containerHeight } : { flex: 1 },
+            ]}
+          >
+            <PagerCard>{item.content}</PagerCard>
+          </View>
+        )}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        decelerationRate="fast"
+        bounces={false}
+        snapToAlignment="start"
+        scrollEnabled={pages.length > 1}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+      />
+
+      <View style={styles.pagerIndicator} pointerEvents="none">
+        {pages.map((page, index) => (
+          <View
+            key={page.key}
+            style={[
+              styles.pagerDot,
+              index === activeIndex && styles.pagerDotActive,
+              {
+                backgroundColor: index === activeIndex ? activeDotColor : inactiveDotColor,
+                opacity: index === activeIndex ? 1 : 0.4,
+              },
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
+
+const PagerCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Card padding={20} radius={20} elevation={3} style={styles.pagerCard}>
+    {children}
+  </Card>
+);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -559,14 +693,90 @@ const styles = StyleSheet.create({
     fontSize: 13,
     opacity: 0.7,
   },
-  bottomSection: {
-    width: '100%',
-    gap: 20,
-    flexShrink: 0,
+  pagerContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    position: 'relative',
   },
-  taskCard: {
+  pagerList: {
+    flex: 1,
+  },
+  pagerContentContainer: {
+    paddingRight: 16,
+    flexGrow: 1,
+  },
+  pagerItem: {
+    width: '100%',
+    paddingVertical: 4,
+  },
+  pagerIndicator: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingRight: 4,
+    gap: 10,
+  },
+  pagerDot: {
+    width: 6,
+    borderRadius: 3,
+    height: 12,
+  },
+  pagerDotActive: {
+    height: 20,
+  },
+  pagerCard: {
+    flex: 1,
+    gap: 16,
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+  },
+  pageContent: {
+    flex: 1,
     width: '100%',
     gap: 16,
+  },
+  pageContentCentered: {
+    justifyContent: 'center',
+  },
+  presetsSection: {
+    marginBottom: 0,
+  },
+  durationCard: {
+    marginTop: 0,
+    padding: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    borderColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  controlsPage: {
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 8,
+  },
+  controlsHint: {
+    fontSize: 13,
+    opacity: 0.7,
+    textAlign: 'center',
+  },
+  taskContent: {
+    flex: 1,
+    width: '100%',
+    gap: 16,
+    justifyContent: 'space-between',
+  },
+  taskEmpty: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  taskEmptyText: {
+    textAlign: 'center',
   },
   taskHeader: {
     flexDirection: 'row',

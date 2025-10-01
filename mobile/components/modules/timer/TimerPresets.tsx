@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Card } from '@/components/shared/layout';
 import { ThemedText } from '@/components/themed-text';
@@ -18,6 +18,7 @@ interface TimerPresetsProps {
   presets: TimerPresetOption[];
   selectedPresetId: string;
   onSelect: (preset: TimerPresetOption) => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 const formatDuration = (minutes: number) => `${minutes} dk`;
@@ -26,13 +27,14 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
   presets,
   selectedPresetId,
   onSelect,
+  style,
 }) => {
   const tintColor = useThemeColor({}, 'tint');
   const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View style={styles.header}> 
         <ThemedText type="subtitle" style={styles.title}>Odak modu seç</ThemedText>
         <ThemedText style={styles.subtitle}>

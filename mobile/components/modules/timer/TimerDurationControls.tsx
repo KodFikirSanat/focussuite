@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Slider } from '@/components/shared/forms';
 import { Card } from '@/components/shared/layout';
@@ -10,6 +10,7 @@ interface TimerDurationControlsProps {
   breakMinutes: number;
   onChangeFocus: (minutes: number) => void;
   onChangeBreak: (minutes: number) => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 const formatMinutes = (value: number) => `${value} dk`;
@@ -19,9 +20,10 @@ export const TimerDurationControls: React.FC<TimerDurationControlsProps> = ({
   breakMinutes,
   onChangeFocus,
   onChangeBreak,
+  style,
 }) => {
   return (
-    <Card style={styles.card}>
+    <Card style={[styles.card, style]}>
       <ThemedText type="subtitle" style={styles.title}>
         Özel süreler
       </ThemedText>
