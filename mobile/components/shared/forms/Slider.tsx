@@ -124,7 +124,7 @@ export const Slider: React.FC<SliderProps> = ({
           hapticFeedback();
           Animated.spring(scaleAnim, {
             toValue: 1.15,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }).start();
         },
         onPanResponderMove: (_, gestureState) => {
@@ -137,7 +137,7 @@ export const Slider: React.FC<SliderProps> = ({
         onPanResponderRelease: () => {
           Animated.spring(scaleAnim, {
             toValue: 1,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }).start();
           const finalPosition = calculatePosition(value);
           setTranslateX(finalPosition);
@@ -146,7 +146,7 @@ export const Slider: React.FC<SliderProps> = ({
         onPanResponderTerminate: () => {
           Animated.spring(scaleAnim, {
             toValue: 1,
-            useNativeDriver: true,
+            useNativeDriver: false,
           }).start();
           const finalPosition = calculatePosition(value);
           setTranslateX(finalPosition);
@@ -189,7 +189,7 @@ export const Slider: React.FC<SliderProps> = ({
   const displayValue = formatValue ? formatValue(value) : value.toString();
 
   return (
-  <View style={[styles.container, style]}>
+    <View style={[styles.container, style]}>
       {(label || showValue) && (
         <View style={styles.headerContainer}>
           {label && (
@@ -208,6 +208,7 @@ export const Slider: React.FC<SliderProps> = ({
       <View
         style={styles.sliderContainer}
         onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
+        {...panResponder.panHandlers}
       >
         <View
           style={[
@@ -224,7 +225,6 @@ export const Slider: React.FC<SliderProps> = ({
         />
 
         <Animated.View
-          {...panResponder.panHandlers}
           style={[
             styles.thumb,
             {

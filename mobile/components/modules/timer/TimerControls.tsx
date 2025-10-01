@@ -1,4 +1,4 @@
-import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/buttons';
+import { IconButton, PrimaryButton } from '@/components/shared/buttons';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
@@ -27,30 +27,12 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.secondaryControls}>
+      <View style={styles.actionRow}>
         <IconButton
           icon={<IconSymbol name="arrow.clockwise" size={24} color={iconColor} />}
           onPress={onReset}
           accessibilityLabel="Zamanlayıcıyı sıfırla"
           disabled={disabled}
-        />
-
-        {onSkip && (
-          <IconButton
-            icon={<IconSymbol name="forward.end" size={24} color={iconColor} />}
-            onPress={onSkip}
-            accessibilityLabel="Bir sonraki aşamaya geç"
-            disabled={disabled}
-          />
-        )}
-      </View>
-
-      <View style={styles.primaryControls}>
-        <SecondaryButton
-          title="Durdur"
-          onPress={onStop}
-          disabled={disabled}
-          style={styles.stopButton}
         />
 
         <PrimaryButton
@@ -67,6 +49,15 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
           }
           style={styles.playButton}
         />
+
+        {onSkip && (
+          <IconButton
+            icon={<IconSymbol name="forward.end" size={24} color={iconColor} />}
+            onPress={onSkip}
+            accessibilityLabel="Bir sonraki aşamaya geç"
+            disabled={disabled}
+          />
+        )}
       </View>
     </View>
   );
@@ -75,25 +66,17 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 16,
     width: '100%',
-    gap: 16,
   },
-  secondaryControls: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  primaryControls: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    flexWrap: 'wrap',
-  },
-  stopButton: {
-    minWidth: 80,
+    gap: 20,
+    width: '100%',
   },
   playButton: {
-    minWidth: 120,
+    minWidth: 160,
   },
 });

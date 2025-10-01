@@ -32,6 +32,7 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
   const tintColor = useThemeColor({}, 'tint');
   const surfaceColor = useThemeColor({}, 'surface');
   const textColor = useThemeColor({}, 'text');
+  const separatorColor = useThemeColor({}, 'outlineVariant');
 
   return (
     <View style={[styles.container, style]}>
@@ -48,6 +49,7 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
             <Card
               key={item.id}
               pressable
+              padding={14}
               onPress={() => onSelect(item)}
               style={[
                 styles.card,
@@ -59,35 +61,43 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
                 },
               ]}
             >
-              {item.badge && (
-                <View style={[styles.badge, { backgroundColor: tintColor }]}>
-                  <ThemedText style={styles.badgeText}>{item.badge}</ThemedText>
-                </View>
-              )}
-              <ThemedText type="subtitle" style={styles.cardTitle}>
-                {item.title}
-              </ThemedText>
-              <ThemedText style={[styles.cardDescription, { color: textColor }]}>
-                {item.description}
-              </ThemedText>
-
-              <View style={styles.metaRow}>
-                <View style={styles.metaBlock}>
-                  <ThemedText style={styles.metaLabel}>Odak</ThemedText>
-                  <ThemedText style={styles.metaValue}>
-                    {formatDuration(item.focusMinutes)}
+              <View style={styles.cardContent}>
+                <View style={styles.infoSection}>
+                  <View style={styles.titleRow}>
+                    <ThemedText type="subtitle" style={styles.cardTitle}>
+                      {item.title}
+                    </ThemedText>
+                    {item.badge && (
+                      <View style={[styles.badge, { backgroundColor: tintColor }]}>
+                        <ThemedText style={styles.badgeText}>{item.badge}</ThemedText>
+                      </View>
+                    )}
+                  </View>
+                  <ThemedText
+                    numberOfLines={2}
+                    style={[styles.cardDescription, { color: textColor }]}
+                  >
+                    {item.description}
                   </ThemedText>
                 </View>
-                <View style={styles.metaBlock}>
-                  <ThemedText style={styles.metaLabel}>Mola</ThemedText>
-                  <ThemedText style={styles.metaValue}>
-                    {formatDuration(item.breakMinutes)}
+
+                <View style={styles.durations}>
+                  <ThemedText style={styles.durationValue}>
+                    Odak {formatDuration(item.focusMinutes)}
+                  </ThemedText>
+                  <View
+                    style={[styles.durationSeparator, { backgroundColor: separatorColor }]}
+                  />
+                  <ThemedText style={styles.durationValue}>
+                    Mola {formatDuration(item.breakMinutes)}
                   </ThemedText>
                 </View>
               </View>
 
               {isSelected && (
-                <ThemedText style={[styles.selectedHint, { color: tintColor }]}>Seçili</ThemedText>
+                <ThemedText style={[styles.selectedHint, { color: tintColor }]}>
+                  Seçili
+                </ThemedText>
               )}
             </Card>
           );
@@ -114,52 +124,65 @@ const styles = StyleSheet.create({
   },
   list: {
     width: '100%',
-    gap: 10,
+    gap: 8,
   },
   card: {
     width: '100%',
-    padding: 14,
+    gap: 8,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 12,
   },
+  infoSection: {
+    flex: 1,
+    gap: 6,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cardTitle: {
+    marginBottom: 0,
+  },
   badge: {
-    alignSelf: 'flex-start',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 999,
-    marginBottom: 12,
   },
   badgeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
-  cardTitle: {
-    marginBottom: 6,
-  },
   cardDescription: {
-    fontSize: 13,
-    opacity: 0.7,
-    marginBottom: 12,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  metaBlock: {
-    flex: 1,
-  },
-  metaLabel: {
     fontSize: 12,
-    opacity: 0.6,
+    opacity: 0.7,
+    lineHeight: 16,
   },
-  metaValue: {
-    fontSize: 16,
+  durations: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  durationSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  durationValue: {
+    fontSize: 13,
     fontWeight: '600',
   },
   selectedHint: {
-    marginTop: 8,
+    marginTop: 6,
     fontSize: 12,
     fontWeight: '600',
+    textAlign: 'right',
   },
 });

@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 12,
     paddingTop: 8,
-    paddingBottom: 12,
+    paddingBottom: 0,
     gap: 12,
   },
   topSection: {
@@ -718,10 +718,10 @@ const styles = StyleSheet.create({
   },
   controlsCard: {
     alignSelf: 'stretch',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   controls: {
-    paddingVertical: 12,
+    paddingVertical: 0,
   },
   taskContent: {
     flex: 1,
