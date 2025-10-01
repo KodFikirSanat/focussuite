@@ -60,7 +60,7 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
     >
       <View style={styles.progressRingWrapper}>
         <ProgressRing
-          size={240}
+          size={260}
           progress={progress}
           color={accentColor}
           backgroundColor={surfaceColor}
@@ -108,8 +108,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   progressRingWrapper: {
-    width: 240,
-    height: 240,
+    width: 260,
+    height: 260,
     alignItems: 'center',
     justifyContent: 'center',
   },

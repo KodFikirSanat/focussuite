@@ -35,7 +35,7 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.header}> 
+      <View style={styles.header}>
         <ThemedText type="subtitle" style={styles.title}>Odak modu seç</ThemedText>
         <ThemedText style={styles.subtitle}>
           Hazır şablonlardan birini seç veya özel sürelerini belirle.
@@ -46,7 +46,7 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
         keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+  contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderItem={({ item }) => {
           const isSelected = item.id === selectedPresetId;
@@ -104,26 +104,28 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: 0,
   },
   header: {
-    marginBottom: 12,
+    marginBottom: 8,
+    gap: 2,
   },
   title: {
-    marginBottom: 4,
+    marginBottom: 0,
   },
   subtitle: {
     opacity: 0.7,
+    fontSize: 12,
   },
   listContent: {
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
   separator: {
-    width: 12,
+    width: 8,
   },
   card: {
-    width: 220,
-    padding: 16,
+    width: 200,
+    padding: 14,
   },
   badge: {
     alignSelf: 'flex-start',

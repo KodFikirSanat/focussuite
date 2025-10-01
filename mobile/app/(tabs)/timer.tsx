@@ -419,7 +419,6 @@ export default function TimerScreen() {
         key: 'controls',
         content: (
           <View style={[styles.pageContent, styles.controlsPage]}>
-            <ThemedText style={styles.controlsHint}>Akış kontrolü</ThemedText>
             <TimerControls
               isRunning={isRunning}
               onPlayPause={handlePlayPause}
@@ -453,15 +452,6 @@ export default function TimerScreen() {
     <SafeAreaWrapper style={styles.safeArea}>
       <View style={styles.wrapper}>
         <View style={styles.topSection}>
-          <View style={styles.header}>
-            <ThemedText type="title" style={styles.title}>
-              Zamanlayıcı
-            </ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Odak döngülerini planla, molalarını yönet ve ritmini koru.
-            </ThemedText>
-          </View>
-
           <View style={styles.timerContainer}>
             <TimerDisplay
               session={session}
@@ -470,9 +460,6 @@ export default function TimerScreen() {
               nextSessionLabel={nextSessionLabel}
               onPress={handlePlayPause}
             />
-            <ThemedText style={styles.timerHint}>
-              {isRunning ? 'Çalışma sürüyor. Dokunarak duraklat.' : 'Hazır. Başlatmak için zamanlayıcıya dokun.'}
-            </ThemedText>
           </View>
         </View>
 
@@ -653,7 +640,7 @@ const VerticalPager: React.FC<VerticalPagerProps> = ({ pages }) => {
 };
 
 const PagerCard: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Card padding={20} radius={20} elevation={3} style={styles.pagerCard}>
+  <Card padding={14} radius={18} elevation={2} style={styles.pagerCard}>
     {children}
   </Card>
 );
@@ -664,34 +651,18 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 24,
-    gap: 24,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 12,
+    gap: 12,
   },
   topSection: {
     alignItems: 'center',
-    gap: 24,
-  },
-  header: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  subtitle: {
-    textAlign: 'center',
-    opacity: 0.7,
-    fontSize: 15,
+    gap: 12,
   },
   timerContainer: {
     alignItems: 'center',
-    gap: 12,
-  },
-  timerHint: {
-    fontSize: 13,
-    opacity: 0.7,
+    gap: 8,
   },
   pagerContainer: {
     flex: 1,
@@ -702,12 +673,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pagerContentContainer: {
-    paddingRight: 16,
     flexGrow: 1,
   },
   pagerItem: {
     width: '100%',
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   pagerIndicator: {
     position: 'absolute',
@@ -716,17 +686,17 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingRight: 4,
-    gap: 10,
+    paddingVertical: 12,
+    paddingRight: 0,
+    gap: 8,
   },
   pagerDot: {
-    width: 6,
+    width: 5,
     borderRadius: 3,
-    height: 12,
+    height: 10,
   },
   pagerDotActive: {
-    height: 20,
+    height: 18,
   },
   pagerCard: {
     flex: 1,
@@ -737,7 +707,7 @@ const styles = StyleSheet.create({
   pageContent: {
     flex: 1,
     width: '100%',
-    gap: 16,
+    gap: 12,
   },
   pageContentCentered: {
     justifyContent: 'center',
@@ -755,19 +725,14 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   controlsPage: {
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 8,
-  },
-  controlsHint: {
-    fontSize: 13,
-    opacity: 0.7,
-    textAlign: 'center',
+    paddingBottom: 4,
   },
   taskContent: {
     flex: 1,
     width: '100%',
-    gap: 16,
+    gap: 12,
     justifyContent: 'space-between',
   },
   taskEmpty: {
@@ -792,8 +757,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
   },
@@ -802,7 +767,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   taskInfo: {
-    gap: 6,
+    gap: 4,
   },
   taskTitle: {
     marginBottom: 0,
@@ -815,10 +780,10 @@ const styles = StyleSheet.create({
   taskDescription: {
     fontSize: 13,
     opacity: 0.7,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   upcomingSection: {
-    gap: 8,
+    gap: 6,
   },
   upcomingLabel: {
     fontSize: 13,
@@ -826,29 +791,29 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   upcomingList: {
-    gap: 8,
+    gap: 6,
   },
   upcomingRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 6,
   },
   upcomingBullet: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    marginTop: 6,
+    marginTop: 5,
   },
   upcomingTexts: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   upcomingTitle: {
     fontSize: 14,
     fontWeight: '600',
   },
   upcomingProject: {
-    fontSize: 12,
+    fontSize: 11,
     opacity: 0.6,
   },
   taskAction: {

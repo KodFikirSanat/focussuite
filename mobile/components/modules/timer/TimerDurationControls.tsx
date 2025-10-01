@@ -57,16 +57,17 @@ export const TimerDurationControls: React.FC<TimerDurationControlsProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    marginTop: 24,
+    marginTop: 0,
   },
   title: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   description: {
-    opacity: 0.7,
-    marginBottom: 16,
+    opacity: 0.65,
+    marginBottom: 12,
+    fontSize: 12,
   },
   sliderGroup: {
-    gap: 12,
+    gap: 10,
   },
 });
