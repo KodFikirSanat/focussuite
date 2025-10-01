@@ -415,20 +415,6 @@ export default function TimerScreen() {
           </View>
         ),
       },
-      {
-        key: 'controls',
-        content: (
-          <View style={[styles.pageContent, styles.controlsPage]}>
-            <TimerControls
-              isRunning={isRunning}
-              onPlayPause={handlePlayPause}
-              onStop={handleStop}
-              onReset={handleReset}
-              onSkip={handleSkip}
-            />
-          </View>
-        ),
-      },
     ],
     [
       activeTask,
@@ -440,11 +426,6 @@ export default function TimerScreen() {
       breakMinutes,
       handleFocusDurationChange,
       handleBreakDurationChange,
-      isRunning,
-      handlePlayPause,
-      handleStop,
-      handleReset,
-      handleSkip,
     ],
   );
 
@@ -464,6 +445,17 @@ export default function TimerScreen() {
         </View>
 
         <VerticalPager pages={pagerPages} />
+
+        <Card padding={16} radius={18} elevation={3} style={styles.controlsCard}>
+          <TimerControls
+            isRunning={isRunning}
+            onPlayPause={handlePlayPause}
+            onStop={handleStop}
+            onReset={handleReset}
+            onSkip={handleSkip}
+            style={styles.controls}
+          />
+        </Card>
       </View>
 
       <Toast
@@ -724,10 +716,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
-  controlsPage: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 4,
+  controlsCard: {
+    alignSelf: 'stretch',
+    paddingVertical: 8,
+  },
+  controls: {
+    paddingVertical: 12,
   },
   taskContent: {
     flex: 1,

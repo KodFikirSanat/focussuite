@@ -2,7 +2,7 @@ import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 interface TimerControlsProps {
   isRunning: boolean;
@@ -11,6 +11,7 @@ interface TimerControlsProps {
   onReset: () => void;
   onSkip?: () => void;
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const TimerControls: React.FC<TimerControlsProps> = ({
@@ -20,11 +21,12 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   onReset,
   onSkip,
   disabled = false,
+  style,
 }) => {
   const iconColor = useThemeColor({}, 'icon');
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View style={styles.secondaryControls}>
         <IconButton
           icon={<IconSymbol name="arrow.clockwise" size={24} color={iconColor} />}
@@ -74,16 +76,19 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     paddingVertical: 20,
+    width: '100%',
+    gap: 16,
   },
   secondaryControls: {
     flexDirection: 'row',
-    marginBottom: 20,
     gap: 16,
   },
   primaryControls: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 16,
+    flexWrap: 'wrap',
   },
   stopButton: {
     minWidth: 80,

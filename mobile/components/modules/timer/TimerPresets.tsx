@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Card } from '@/components/shared/layout';
 import { ThemedText } from '@/components/themed-text';
@@ -41,17 +41,12 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
           Hazır şablonlardan birini seç veya özel sürelerini belirle.
         </ThemedText>
       </View>
-      <FlatList
-        data={presets}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-  contentContainerStyle={styles.listContent}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        renderItem={({ item }) => {
+      <View style={styles.list}>
+        {presets.map((item) => {
           const isSelected = item.id === selectedPresetId;
           return (
             <Card
+              key={item.id}
               pressable
               onPress={() => onSelect(item)}
               style={[
@@ -65,14 +60,14 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
               ]}
             >
               {item.badge && (
-                <View style={[styles.badge, { backgroundColor: tintColor }]}> 
+                <View style={[styles.badge, { backgroundColor: tintColor }]}>
                   <ThemedText style={styles.badgeText}>{item.badge}</ThemedText>
                 </View>
               )}
               <ThemedText type="subtitle" style={styles.cardTitle}>
                 {item.title}
               </ThemedText>
-              <ThemedText style={[styles.cardDescription, { color: textColor }]}> 
+              <ThemedText style={[styles.cardDescription, { color: textColor }]}>
                 {item.description}
               </ThemedText>
 
@@ -96,8 +91,8 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
               )}
             </Card>
           );
-        }}
-      />
+        })}
+      </View>
     </View>
   );
 };
@@ -117,15 +112,14 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     fontSize: 12,
   },
-  listContent: {
-    paddingVertical: 4,
-  },
-  separator: {
-    width: 8,
+  list: {
+    width: '100%',
+    gap: 10,
   },
   card: {
-    width: 200,
+    width: '100%',
     padding: 14,
+    gap: 12,
   },
   badge: {
     alignSelf: 'flex-start',

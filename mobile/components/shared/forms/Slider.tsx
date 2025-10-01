@@ -105,10 +105,22 @@ export const Slider: React.FC<SliderProps> = ({
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => !disabled,
-        onMoveShouldSetPanResponder: () => !disabled,
-        onPanResponderGrant: () => {
+        onStartShouldSetPanResponderCapture: () => !disabled,
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (disabled) return false;
+          return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        },
+        onMoveShouldSetPanResponderCapture: (_, gestureState) => {
+          if (disabled) return false;
+          return Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        },
+        onPanResponderGrant: (event) => {
           if (disabled) return;
-          startXRef.current = translateXValueRef.current;
+          const touchPosition = clampPosition(event.nativeEvent.locationX);
+          startXRef.current = touchPosition;
+          setTranslateX(touchPosition);
+          const newValue = calculateValue(touchPosition);
+          updateValue(newValue);
           hapticFeedback();
           Animated.spring(scaleAnim, {
             toValue: 1.15,
@@ -130,7 +142,7 @@ export const Slider: React.FC<SliderProps> = ({
           const finalPosition = calculatePosition(value);
           setTranslateX(finalPosition);
         },
-        onPanResponderTerminationRequest: () => true,
+        onPanResponderTerminationRequest: () => false,
         onPanResponderTerminate: () => {
           Animated.spring(scaleAnim, {
             toValue: 1,
