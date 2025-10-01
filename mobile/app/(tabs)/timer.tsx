@@ -1,24 +1,32 @@
 import * as Haptics from 'expo-haptics';
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
-    TimerControls,
-    TimerDisplay,
-    TimerDurationControls,
-    TimerPresetOption,
-    TimerPresets,
+  TimerControls,
+  TimerDisplay,
+  TimerDurationControls,
+  TimerPresetOption,
+  TimerPresets,
 } from '@/components/modules/timer';
+import { SecondaryButton } from '@/components/shared/buttons';
 import { Toast, type ToastType } from '@/components/shared/feedback';
-import { SafeAreaWrapper } from '@/components/shared/layout';
+import { Card, SafeAreaWrapper } from '@/components/shared/layout';
 import { ThemedText } from '@/components/themed-text';
-import { TimerSession } from '@/types';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { createInitialProjects, listAllTasks } from '@/data/sample-data';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { Task, TimerSession } from '@/types';
 
 type SessionType = TimerSession['type'];
 
 interface DurationState {
   focusMinutes: number;
   breakMinutes: number;
+}
+
+interface TaskWithProject extends Task {
+  projectTitle?: string;
 }
 
 const CUSTOM_PRESET_ID = 'custom';
@@ -69,6 +77,10 @@ export default function TimerScreen() {
   const [focusMinutes, setFocusMinutes] = React.useState<number>(DEFAULT_PRESET.focusMinutes);
   const [breakMinutes, setBreakMinutes] = React.useState<number>(DEFAULT_PRESET.breakMinutes);
 
+  const projects = React.useMemo(() => createInitialProjects(), []);
+  const [taskQueue] = React.useState<TaskWithProject[]>(() => listAllTasks(projects) as TaskWithProject[]);
+  const [activeTaskIndex, setActiveTaskIndex] = React.useState(0);
+
   const [session, setSession] = React.useState<TimerSession>({
     id: `work-${Date.now()}`,
     type: 'work',
@@ -84,6 +96,12 @@ export default function TimerScreen() {
   });
 
   const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const activeTask = taskQueue[activeTaskIndex];
+  const upcomingTasks = React.useMemo(
+    () => taskQueue.slice(activeTaskIndex + 1, activeTaskIndex + 3),
+    [taskQueue, activeTaskIndex],
+  );
 
   const getDurationForType = React.useCallback(
     (type: SessionType) => {
@@ -282,6 +300,15 @@ export default function TimerScreen() {
     [],
   );
 
+  const handleAdvanceTask = React.useCallback(() => {
+    setActiveTaskIndex((prev) => {
+      if (taskQueue.length === 0) {
+        return prev;
+      }
+      return (prev + 1) % taskQueue.length;
+    });
+  }, [taskQueue]);
+
   const handlePlayPause = React.useCallback(() => {
     if (isRunning) {
       setIsRunning(false);
@@ -344,45 +371,51 @@ export default function TimerScreen() {
 
   return (
     <SafeAreaWrapper style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <ThemedText type="title" style={styles.title}>
-            Zamanlayıcı
-          </ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Odak döngülerini planla, molalarını yönet ve ritmini koru.
-          </ThemedText>
+      <View style={styles.wrapper}>
+        <View style={styles.topSection}>
+          <View style={styles.header}>
+            <ThemedText type="title" style={styles.title}>
+              Zamanlayıcı
+            </ThemedText>
+            <ThemedText style={styles.subtitle}>
+              Odak döngülerini planla, molalarını yönet ve ritmini koru.
+            </ThemedText>
+          </View>
+
+          <View style={styles.timerContainer}>
+            <TimerDisplay
+              session={session}
+              remainingTime={remainingTime}
+              isRunning={isRunning}
+              nextSessionLabel={nextSessionLabel}
+              onPress={handlePlayPause}
+            />
+            <ThemedText style={styles.timerHint}>
+              {isRunning ? 'Çalışma sürüyor. Dokunarak duraklat.' : 'Hazır. Başlatmak için zamanlayıcıya dokun.'}
+            </ThemedText>
+          </View>
         </View>
 
-        <TimerDisplay
-          session={session}
-          remainingTime={remainingTime}
-          isRunning={isRunning}
-          nextSessionLabel={nextSessionLabel}
-          onPress={handlePlayPause}
+        <ActiveTaskPanel
+          task={activeTask}
+          upcoming={upcomingTasks}
+          onAdvance={handleAdvanceTask}
         />
 
-        <View style={styles.section}>
+        <View style={styles.bottomSection}>
           <TimerPresets
             presets={PRESET_OPTIONS}
             selectedPresetId={selectedPresetId}
             onSelect={handlePresetSelect}
           />
-        </View>
 
-        <View style={styles.section}>
           <TimerDurationControls
             focusMinutes={focusMinutes}
             breakMinutes={breakMinutes}
             onChangeFocus={handleFocusDurationChange}
             onChangeBreak={handleBreakDurationChange}
           />
-        </View>
 
-        <View style={styles.section}>
           <TimerControls
             isRunning={isRunning}
             onPlayPause={handlePlayPause}
@@ -391,7 +424,7 @@ export default function TimerScreen() {
             onSkip={handleSkip}
           />
         </View>
-      </ScrollView>
+      </View>
 
       <Toast
         visible={toastState.visible}
@@ -404,19 +437,110 @@ export default function TimerScreen() {
   );
 }
 
+interface ActiveTaskPanelProps {
+  task?: TaskWithProject;
+  upcoming: TaskWithProject[];
+  onAdvance: () => void;
+}
+
+const ActiveTaskPanel: React.FC<ActiveTaskPanelProps> = ({ task, upcoming, onAdvance }) => {
+  const tintColor = useThemeColor({}, 'tint');
+  const surfaceVariant = useThemeColor({}, 'surfaceVariant');
+  const outlineVariant = useThemeColor({}, 'outlineVariant');
+
+  if (!task) {
+    return (
+      <Card style={styles.taskCard}>
+        <ThemedText type="subtitle">Görev bulunamadı</ThemedText>
+        <ThemedText style={styles.taskDescription}>
+          Planner bölümünden görev atadığında burada anlık odak öğen görünecek.
+        </ThemedText>
+      </Card>
+    );
+  }
+
+  return (
+    <Card style={styles.taskCard}>
+      <View style={styles.taskHeader}>
+        <ThemedText style={styles.taskSectionTitle}>Anlık görev</ThemedText>
+        <View
+          style={[
+            styles.taskBadge,
+            { backgroundColor: surfaceVariant, borderColor: outlineVariant },
+          ]}
+        >
+          <IconSymbol name="flag.fill" size={14} color={tintColor} />
+          <ThemedText style={[styles.taskBadgeText, { color: tintColor }]}>Odak bloğu</ThemedText>
+        </View>
+      </View>
+
+      <View style={styles.taskInfo}>
+        <ThemedText type="title" style={styles.taskTitle}>
+          {task.title}
+        </ThemedText>
+        <ThemedText style={styles.taskProject}>
+          {task.projectTitle ?? 'Bağımsız görev'}
+        </ThemedText>
+        {task.description ? (
+          <ThemedText style={styles.taskDescription}>{task.description}</ThemedText>
+        ) : null}
+      </View>
+
+      {upcoming.length > 0 && (
+        <View style={styles.upcomingSection}>
+          <ThemedText style={styles.upcomingLabel}>Sıradaki görevler</ThemedText>
+          <View style={styles.upcomingList}>
+            {upcoming.map((item) => (
+              <View key={item.id} style={styles.upcomingRow}>
+                <View
+                  style={[
+                    styles.upcomingBullet,
+                    { backgroundColor: tintColor },
+                  ]}
+                />
+                <View style={styles.upcomingTexts}>
+                  <ThemedText style={styles.upcomingTitle}>{item.title}</ThemedText>
+                  {item.projectTitle ? (
+                    <ThemedText style={styles.upcomingProject}>
+                      {item.projectTitle}
+                    </ThemedText>
+                  ) : null}
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      <SecondaryButton
+        title="Sonraki göreve geç"
+        onPress={onAdvance}
+        size="small"
+        icon={<IconSymbol name="forward.end" size={18} color={tintColor} />}
+        variant="primary"
+        style={styles.taskAction}
+      />
+    </Card>
+  );
+};
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  contentContainer: {
+  wrapper: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingBottom: 48,
+    paddingTop: 16,
+    paddingBottom: 24,
+    gap: 24,
+  },
+  topSection: {
+    alignItems: 'center',
     gap: 24,
   },
   header: {
     alignItems: 'center',
-    paddingTop: 16,
-    paddingBottom: 12,
     gap: 8,
   },
   title: {
@@ -427,7 +551,97 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     fontSize: 15,
   },
-  section: {
+  timerContainer: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  timerHint: {
+    fontSize: 13,
+    opacity: 0.7,
+  },
+  bottomSection: {
     width: '100%',
+    gap: 20,
+    flexShrink: 0,
+  },
+  taskCard: {
+    width: '100%',
+    gap: 16,
+  },
+  taskHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  taskSectionTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    opacity: 0.85,
+  },
+  taskBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  taskBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  taskInfo: {
+    gap: 6,
+  },
+  taskTitle: {
+    marginBottom: 0,
+  },
+  taskProject: {
+    fontSize: 13,
+    fontWeight: '600',
+    opacity: 0.8,
+  },
+  taskDescription: {
+    fontSize: 13,
+    opacity: 0.7,
+    lineHeight: 18,
+  },
+  upcomingSection: {
+    gap: 8,
+  },
+  upcomingLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    opacity: 0.75,
+  },
+  upcomingList: {
+    gap: 8,
+  },
+  upcomingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  upcomingBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 6,
+  },
+  upcomingTexts: {
+    flex: 1,
+    gap: 2,
+  },
+  upcomingTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  upcomingProject: {
+    fontSize: 12,
+    opacity: 0.6,
+  },
+  taskAction: {
+    alignSelf: 'flex-start',
   },
 });
