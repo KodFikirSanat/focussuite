@@ -5,7 +5,7 @@ export * from './navigation';
 // Module-specific data types
 export interface TimerSession {
   id: string;
-  type: 'work' | 'break' | 'longBreak';
+  type: 'work' | 'break';
   duration: number;
   startTime?: Date;
   endTime?: Date;
@@ -112,8 +112,6 @@ export interface NotificationSettings {
 export interface TimerSettings {
   workDuration: number;
   shortBreakDuration: number;
-  longBreakDuration: number;
-  sessionsUntilLongBreak: number;
   autoStartBreaks: boolean;
   autoStartWork: boolean;
 }

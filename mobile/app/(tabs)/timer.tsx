@@ -3,11 +3,11 @@ import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import {
-  TimerControls,
-  TimerDisplay,
-  TimerDurationControls,
-  TimerPresetOption,
-  TimerPresets,
+    TimerControls,
+    TimerDisplay,
+    TimerDurationControls,
+    TimerPresetOption,
+    TimerPresets,
 } from '@/components/modules/timer';
 import { Toast, type ToastType } from '@/components/shared/feedback';
 import { SafeAreaWrapper } from '@/components/shared/layout';
@@ -19,8 +19,6 @@ type SessionType = TimerSession['type'];
 interface DurationState {
   focusMinutes: number;
   breakMinutes: number;
-  longBreakMinutes: number;
-  cyclesBeforeLongBreak: number;
 }
 
 const CUSTOM_PRESET_ID = 'custom';
@@ -29,11 +27,9 @@ const PRESET_OPTIONS: TimerPresetOption[] = [
   {
     id: 'pomodoro',
     title: 'Pomodoro',
-    description: '25 dk odak, 5 dk mola. 4 döngü sonrası uzun mola.',
+    description: '25 dk odak, 5 dk mola. Klasik pomodoro ritmi.',
     focusMinutes: 25,
     breakMinutes: 5,
-    longBreakMinutes: 15,
-    cyclesBeforeLongBreak: 4,
     badge: 'Klasik',
   },
   {
@@ -41,9 +37,7 @@ const PRESET_OPTIONS: TimerPresetOption[] = [
     title: 'Derin Odak',
     description: '90 dk odaklı çalışma, ardından 20 dk dinlenme.',
     focusMinutes: 90,
-    breakMinutes: 15,
-    longBreakMinutes: 20,
-    cyclesBeforeLongBreak: 1,
+    breakMinutes: 20,
     badge: 'Yoğun',
   },
   {
@@ -52,8 +46,6 @@ const PRESET_OPTIONS: TimerPresetOption[] = [
     description: 'Süreleri kendin belirle ve kaydet.',
     focusMinutes: 50,
     breakMinutes: 10,
-    longBreakMinutes: 20,
-    cyclesBeforeLongBreak: 4,
   },
 ];
 
@@ -72,16 +64,10 @@ export default function TimerScreen() {
   const [customDurations, setCustomDurations] = React.useState<DurationState>({
     focusMinutes: CUSTOM_PRESET_DEFAULTS.focusMinutes,
     breakMinutes: CUSTOM_PRESET_DEFAULTS.breakMinutes,
-    longBreakMinutes: CUSTOM_PRESET_DEFAULTS.longBreakMinutes ?? 15,
-    cyclesBeforeLongBreak: CUSTOM_PRESET_DEFAULTS.cyclesBeforeLongBreak ?? 4,
   });
 
   const [focusMinutes, setFocusMinutes] = React.useState<number>(DEFAULT_PRESET.focusMinutes);
   const [breakMinutes, setBreakMinutes] = React.useState<number>(DEFAULT_PRESET.breakMinutes);
-  const [longBreakMinutes, setLongBreakMinutes] = React.useState<number>(DEFAULT_PRESET.longBreakMinutes ?? 15);
-  const [cyclesBeforeLongBreak, setCyclesBeforeLongBreak] = React.useState<number>(
-    DEFAULT_PRESET.cyclesBeforeLongBreak ?? 4,
-  );
 
   const [session, setSession] = React.useState<TimerSession>({
     id: `work-${Date.now()}`,
@@ -91,8 +77,6 @@ export default function TimerScreen() {
   });
   const [isRunning, setIsRunning] = React.useState<boolean>(false);
   const [remainingTime, setRemainingTime] = React.useState<number>(DEFAULT_PRESET.focusMinutes * 60);
-  const [completedWorkSessions, setCompletedWorkSessions] = React.useState<number>(0);
-
   const [toastState, setToastState] = React.useState<ToastState>({
     visible: false,
     message: '',
@@ -108,13 +92,11 @@ export default function TimerScreen() {
           return focusMinutes * 60;
         case 'break':
           return breakMinutes * 60;
-        case 'longBreak':
-          return longBreakMinutes * 60;
         default:
           return focusMinutes * 60;
       }
     },
-    [focusMinutes, breakMinutes, longBreakMinutes],
+    [focusMinutes, breakMinutes],
   );
 
   const clearTimerInterval = React.useCallback(() => {
@@ -180,57 +162,26 @@ export default function TimerScreen() {
       if (!session) return;
 
       const wasWorkSession = session.type === 'work';
-      const updatedCompletedCount = wasWorkSession
-        ? completedWorkSessions + 1
-        : completedWorkSessions;
-
-      if (wasWorkSession) {
-        setCompletedWorkSessions(updatedCompletedCount);
-      }
 
       if (!options.skipped) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
 
       if (wasWorkSession) {
-        const shouldTakeLongBreak =
-          cyclesBeforeLongBreak > 0 && updatedCompletedCount % cyclesBeforeLongBreak === 0;
-
         if (!options.skipped) {
-          showToast(
-            shouldTakeLongBreak
-              ? 'Odak süresi tamamlandı! Uzun mola zamanı.'
-              : 'Odak süresi tamamlandı! Kısa mola zamanı.',
-            'success',
-          );
+          showToast('Odak süresi tamamlandı! Kısa mola zamanı.', 'success');
         }
-
-        startNextSession(shouldTakeLongBreak ? 'longBreak' : 'break');
+        startNextSession('break');
         return;
       }
 
       if (!options.skipped) {
-        showToast(
-          session.type === 'longBreak'
-            ? 'Uzun mola sona erdi. Yeni döngüye hazırsın!'
-            : 'Kısa mola sona erdi. Odaklanmaya geri dön!',
-          session.type === 'longBreak' ? 'info' : 'warning',
-        );
-      }
-
-      if (session.type === 'longBreak') {
-        setCompletedWorkSessions(0);
+        showToast('Kısa mola sona erdi. Odaklanmaya geri dön!', 'warning');
       }
 
       startNextSession('work');
     },
-    [
-      session,
-      completedWorkSessions,
-      cyclesBeforeLongBreak,
-      showToast,
-      startNextSession,
-    ],
+    [session, showToast, startNextSession],
   );
 
   React.useEffect(() => {
@@ -270,16 +221,13 @@ export default function TimerScreen() {
 
   React.useEffect(() => {
     syncSessionDuration();
-  }, [focusMinutes, breakMinutes, longBreakMinutes, syncSessionDuration]);
+  }, [focusMinutes, breakMinutes, syncSessionDuration]);
 
   const applyDurationsAndReset = React.useCallback(
     (durations: DurationState) => {
       setFocusMinutes(durations.focusMinutes);
       setBreakMinutes(durations.breakMinutes);
-      setLongBreakMinutes(durations.longBreakMinutes);
-      setCyclesBeforeLongBreak(durations.cyclesBeforeLongBreak);
 
-      setCompletedWorkSessions(0);
       setIsRunning(false);
 
       const resetSession: TimerSession = {
@@ -305,8 +253,6 @@ export default function TimerScreen() {
           : {
               focusMinutes: preset.focusMinutes,
               breakMinutes: preset.breakMinutes,
-              longBreakMinutes: preset.longBreakMinutes ?? customDurations.longBreakMinutes,
-              cyclesBeforeLongBreak: preset.cyclesBeforeLongBreak ?? customDurations.cyclesBeforeLongBreak,
             };
 
       applyDurationsAndReset(durations);
@@ -336,28 +282,6 @@ export default function TimerScreen() {
     [],
   );
 
-  const handleLongBreakChange = React.useCallback(
-    (value: number) => {
-      const rounded = Math.max(5, value);
-      setCustomDurations((prev) => ({ ...prev, longBreakMinutes: rounded }));
-      setLongBreakMinutes(rounded);
-      setSelectedPresetId(CUSTOM_PRESET_ID);
-      setIsRunning(false);
-    },
-    [],
-  );
-
-  const handleCycleChange = React.useCallback(
-    (value: number) => {
-      const cycles = Math.max(1, Math.round(value));
-      setCustomDurations((prev) => ({ ...prev, cyclesBeforeLongBreak: cycles }));
-      setCyclesBeforeLongBreak(cycles);
-      setSelectedPresetId(CUSTOM_PRESET_ID);
-      setIsRunning(false);
-    },
-    [],
-  );
-
   const handlePlayPause = React.useCallback(() => {
     if (isRunning) {
       setIsRunning(false);
@@ -371,7 +295,6 @@ export default function TimerScreen() {
 
   const handleStop = React.useCallback(() => {
     setIsRunning(false);
-    setCompletedWorkSessions(0);
 
     const nextDuration = focusMinutes * 60;
     setSession({
@@ -409,22 +332,14 @@ export default function TimerScreen() {
     const currentType = session?.type ?? 'work';
 
     if (currentType === 'work') {
-      const upcomingCompleted = completedWorkSessions + 1;
-      const shouldLongBreak =
-        cyclesBeforeLongBreak > 0 && upcomingCompleted % cyclesBeforeLongBreak === 0;
-      return shouldLongBreak
-        ? `Uzun mola • ${longBreakMinutes} dk`
-        : `Kısa mola • ${breakMinutes} dk`;
+      return `Kısa mola • ${breakMinutes} dk`;
     }
 
     return `Odak • ${focusMinutes} dk`;
   }, [
     session?.type,
-    completedWorkSessions,
-    cyclesBeforeLongBreak,
     focusMinutes,
     breakMinutes,
-    longBreakMinutes,
   ]);
 
   return (
@@ -447,8 +362,6 @@ export default function TimerScreen() {
           remainingTime={remainingTime}
           isRunning={isRunning}
           nextSessionLabel={nextSessionLabel}
-          completedWorkSessions={completedWorkSessions}
-          cyclesBeforeLongBreak={cyclesBeforeLongBreak}
           onPress={handlePlayPause}
         />
 
@@ -464,12 +377,8 @@ export default function TimerScreen() {
           <TimerDurationControls
             focusMinutes={focusMinutes}
             breakMinutes={breakMinutes}
-            longBreakMinutes={longBreakMinutes}
-            cyclesBeforeLongBreak={cyclesBeforeLongBreak}
             onChangeFocus={handleFocusDurationChange}
             onChangeBreak={handleBreakDurationChange}
-            onChangeLongBreak={handleLongBreakChange}
-            onChangeCycles={handleCycleChange}
           />
         </View>
 

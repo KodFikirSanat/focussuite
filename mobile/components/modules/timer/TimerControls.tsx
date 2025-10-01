@@ -1,5 +1,6 @@
 import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/buttons';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -20,21 +21,23 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   onSkip,
   disabled = false,
 }) => {
+  const iconColor = useThemeColor({}, 'icon');
+
   return (
     <View style={styles.container}>
       <View style={styles.secondaryControls}>
         <IconButton
-          icon={<IconSymbol name="arrow.clockwise" size={24} color="#666" />}
+          icon={<IconSymbol name="arrow.clockwise" size={24} color={iconColor} />}
           onPress={onReset}
-          accessibilityLabel="Reset timer"
+          accessibilityLabel="Zamanlayıcıyı sıfırla"
           disabled={disabled}
         />
 
         {onSkip && (
           <IconButton
-            icon={<IconSymbol name="forward.end" size={24} color="#666" />}
+            icon={<IconSymbol name="forward.end" size={24} color={iconColor} />}
             onPress={onSkip}
-            accessibilityLabel="Skip session"
+            accessibilityLabel="Bir sonraki aşamaya geç"
             disabled={disabled}
           />
         )}
@@ -42,14 +45,14 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 
       <View style={styles.primaryControls}>
         <SecondaryButton
-          title="Stop"
+          title="Durdur"
           onPress={onStop}
           disabled={disabled}
           style={styles.stopButton}
         />
 
         <PrimaryButton
-          title={isRunning ? 'Pause' : 'Start'}
+          title={isRunning ? 'Duraklat' : 'Başlat'}
           onPress={onPlayPause}
           variant={isRunning ? 'warning' : 'primary'}
           disabled={disabled}

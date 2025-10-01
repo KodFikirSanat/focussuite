@@ -5,16 +5,12 @@ import { Card } from '@/components/shared/layout';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
-export type SessionPhase = 'work' | 'break' | 'longBreak';
-
 export interface TimerPresetOption {
   id: string;
   title: string;
   description: string;
   focusMinutes: number;
   breakMinutes: number;
-  longBreakMinutes?: number;
-  cyclesBeforeLongBreak?: number;
   badge?: string;
 }
 
@@ -93,17 +89,6 @@ export const TimerPresets: React.FC<TimerPresetsProps> = ({
                 </View>
               </View>
 
-              {item.longBreakMinutes && item.cyclesBeforeLongBreak ? (
-                <View style={styles.metaRow}>
-                  <View style={styles.metaBlockWide}>
-                    <ThemedText style={styles.metaLabel}>Uzun mola</ThemedText>
-                    <ThemedText style={styles.metaValue}>
-                      {formatDuration(item.longBreakMinutes)} • {item.cyclesBeforeLongBreak} döngü
-                    </ThemedText>
-                  </View>
-                </View>
-              ) : null}
-
               {isSelected && (
                 <ThemedText style={[styles.selectedHint, { color: tintColor }]}>Seçili</ThemedText>
               )}
@@ -164,9 +149,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metaBlock: {
-    flex: 1,
-  },
-  metaBlockWide: {
     flex: 1,
   },
   metaLabel: {

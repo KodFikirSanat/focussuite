@@ -12,8 +12,6 @@ export interface TimerDisplayProps {
   remainingTime: number;
   isRunning: boolean;
   nextSessionLabel?: string;
-  completedWorkSessions?: number;
-  cyclesBeforeLongBreak?: number;
   onPress?: () => void;
 }
 
@@ -22,8 +20,6 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   remainingTime,
   isRunning,
   nextSessionLabel,
-  completedWorkSessions = 0,
-  cyclesBeforeLongBreak,
   onPress,
 }) => {
   const accentColor = useThemeColor(
@@ -36,7 +32,6 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
   );
   const surfaceColor = useThemeColor({}, 'surface');
   const metaColor = useThemeColor({}, 'icon');
-  const tertiaryColor = useThemeColor({}, 'tertiary');
 
   const formatTime = React.useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -53,24 +48,6 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
     const ratio = Math.max(0, Math.min(1, elapsed / session.duration));
     return ratio * 100;
   }, [remainingTime, session]);
-
-  const cycleProgress = React.useMemo(() => {
-    if (!cyclesBeforeLongBreak || cyclesBeforeLongBreak <= 1) {
-      return undefined;
-    }
-
-    if (!session) {
-      return `0/${cyclesBeforeLongBreak} döngü`;
-    }
-
-    const completedModulo = completedWorkSessions % cyclesBeforeLongBreak;
-
-    if (session.type === 'work') {
-      return `${completedModulo + 1}/${cyclesBeforeLongBreak} döngü`;
-    }
-
-    return `${completedModulo === 0 ? cyclesBeforeLongBreak : completedModulo}/${cyclesBeforeLongBreak} döngü`;
-  }, [completedWorkSessions, cyclesBeforeLongBreak, session]);
 
   const Wrapper = onPress ? Pressable : View;
 
@@ -102,11 +79,6 @@ export const TimerDisplay: React.FC<TimerDisplayProps> = ({
             {isRunning ? 'Çalışıyor' : 'Duraklatıldı'}
           </ThemedText>
 
-          {cycleProgress && (
-            <ThemedText style={[styles.meta, { color: tertiaryColor }]}>
-              {cycleProgress}
-            </ThemedText>
-          )}
 
           {nextSessionLabel && (
             <ThemedText style={[styles.nextSession, { color: metaColor }]}>
@@ -125,8 +97,6 @@ const getSessionLabel = (type: TimerSession['type']) => {
       return 'Odaklan';
     case 'break':
       return 'Ara';
-    case 'longBreak':
-      return 'Uzun Ara';
     default:
       return 'Zamanlayıcı';
   }
@@ -161,10 +131,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 15,
     fontWeight: '500',
-  },
-  meta: {
-    marginTop: 6,
-    fontSize: 13,
   },
   nextSession: {
     marginTop: 4,
