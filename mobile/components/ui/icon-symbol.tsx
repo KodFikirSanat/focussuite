@@ -35,6 +35,10 @@ const MAPPING = {
   'pause.fill': 'pause',
   'arrow.clockwise': 'autorenew',
   'forward.end': 'skip-next',
+  'info.circle': 'info',
+  'square.and.pencil': 'edit-square',
+  'square.grid.2x2': 'dashboard',
+  'list.bullet': 'format-list-bulleted',
 } as IconMapping;
 
 /**

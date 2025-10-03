@@ -147,6 +147,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
+  const surfaceVariant = useThemeColor({}, 'surfaceVariant');
+  const outlineVariant = useThemeColor({}, 'outlineVariant');
 
   const [projects, setProjects] = React.useState<ProjectWithResources[]>(() =>
     sanitizeProjects(createInitialProjects()),
@@ -209,6 +211,10 @@ export default function HomeScreen() {
     projectId: string | null;
     resourceId: string | null;
   }>({ visible: false, projectId: null, resourceId: null });
+
+  const toggleProjectView = React.useCallback(() => {
+    setProjectViewMode((prev) => (prev === 'list' ? 'board' : 'list'));
+  }, []);
 
   const openProjectModal = React.useCallback(() => {
     setProjectForm({ title: '', description: '' });
@@ -594,6 +600,10 @@ export default function HomeScreen() {
     return project.resources.find((resource) => resource.id === resourceItemId) ?? null;
   }, [projects, resourceProjectId, resourceItemId]);
 
+  const isListView = projectViewMode === 'list';
+  const viewToggleIcon = isListView ? 'square.grid.2x2' : 'list.bullet';
+  const viewToggleLabel = isListView ? 'Kart görünümünü aç' : 'Liste görünümünü aç';
+
   return (
     <SafeAreaWrapper>
       <ScrollView
@@ -629,56 +639,17 @@ export default function HomeScreen() {
                 <Pressable
                   style={({ pressed }) => [
                     styles.viewToggleButton,
-                    projectViewMode === 'board' && {
-                      borderColor: tintColor,
-                      backgroundColor: `${tintColor}1A`,
+                    {
+                      borderColor: outlineVariant,
+                      backgroundColor: surfaceVariant,
                     },
                     pressed && styles.viewToggleButtonPressed,
                   ]}
-                  onPress={() => setProjectViewMode('board')}
+                  onPress={toggleProjectView}
                   accessibilityRole="button"
-                  accessibilityLabel="Kart görünümünü aç"
+                  accessibilityLabel={viewToggleLabel}
                 >
-                  <IconSymbol
-                    name="square.grid.2x2"
-                    size={16}
-                    color={projectViewMode === 'board' ? tintColor : iconColor}
-                  />
-                  <ThemedText
-                    style={[
-                      styles.viewToggleLabel,
-                      projectViewMode === 'board' && { color: tintColor },
-                    ]}
-                  >
-                    Kart
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.viewToggleButton,
-                    projectViewMode === 'list' && {
-                      borderColor: tintColor,
-                      backgroundColor: `${tintColor}1A`,
-                    },
-                    pressed && styles.viewToggleButtonPressed,
-                  ]}
-                  onPress={() => setProjectViewMode('list')}
-                  accessibilityRole="button"
-                  accessibilityLabel="Liste görünümünü aç"
-                >
-                  <IconSymbol
-                    name="list.bullet"
-                    size={16}
-                    color={projectViewMode === 'list' ? tintColor : iconColor}
-                  />
-                  <ThemedText
-                    style={[
-                      styles.viewToggleLabel,
-                      projectViewMode === 'list' && { color: tintColor },
-                    ]}
-                  >
-                    Liste
-                  </ThemedText>
+                  <IconSymbol name={viewToggleIcon} size={20} color={tintColor} />
                 </Pressable>
               </View>
               <SecondaryButton
@@ -1098,25 +1069,20 @@ const styles = StyleSheet.create({
   viewToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   viewToggleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 999,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(0,0,0,0.12)',
     backgroundColor: 'rgba(0,0,0,0.02)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   viewToggleButtonPressed: {
     opacity: 0.8,
-  },
-  viewToggleLabel: {
-    fontSize: 13,
-    fontWeight: '600',
   },
   emptyState: {
     fontSize: 14,
