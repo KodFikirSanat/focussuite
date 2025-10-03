@@ -20,10 +20,14 @@ interface ProjectCardProps {
   project: ProjectWithResources;
   onAddTask: (projectId: string, priority?: Task['priority']) => void;
   onAddResource: (projectId: string) => void;
+  onViewResource: (projectId: string, resourceId: string) => void;
+  onEditResource: (projectId: string, resource: ResourceItem) => void;
   onToggleTask: (projectId: string, taskId: string) => void;
   onDeleteTask: (projectId: string, taskId: string) => void;
   onDeleteResource: (projectId: string, resourceId: string) => void;
   onDeleteProject: (projectId: string) => void;
+  onOpenDetails?: (projectId: string) => void;
+  showTasks?: boolean;
 }
 
 const PRIORITY_LABELS: Record<Task['priority'], string> = {
@@ -36,16 +40,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   project,
   onAddTask,
   onAddResource,
+  onViewResource,
+  onEditResource,
   onToggleTask,
   onDeleteTask,
   onDeleteResource,
   onDeleteProject,
+  onOpenDetails,
+  showTasks = true,
 }) => {
   const dangerColor = useThemeColor({}, 'danger');
   const warningColor = useThemeColor({}, 'warning');
   const successColor = useThemeColor({}, 'success');
   const tintColor = useThemeColor({}, 'tint');
   const iconColor = useThemeColor({}, 'icon');
+  const surfaceVariant = useThemeColor({}, 'surfaceVariant');
+  const outlineVariant = useThemeColor({}, 'outlineVariant');
   const { width } = useWindowDimensions();
   const isCompact = width < 768;
 
@@ -60,6 +70,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     medium: warningColor,
     low: successColor,
   };
+
+  const totalTasks = project.tasks.length;
+  const completedTasks = project.tasks.filter((task) => task.completed).length;
+  const pendingTasks = Math.max(0, totalTasks - completedTasks);
 
   const getPriorityBackground = (priority: Task['priority']) => hexToRgba(priorityAccent[priority], 0.12);
 
@@ -149,13 +163,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                   ) : null}
                 </View>
               </View>
-              <IconButton
-                icon={<IconSymbol name="trash.fill" size={18} color={iconColor} />}
-                accessibilityLabel={`${resource.title} kaynağını sil`}
-                onPress={() => onDeleteResource(project.id, resource.id)}
-                size="small"
-                style={styles.resourceDeleteButton}
-              />
+              <View style={styles.resourceActions}>
+                <IconButton
+                  icon={<IconSymbol name="info.circle" size={18} color={iconColor} />}
+                  accessibilityLabel={`${resource.title} kaynağı detaylarını görüntüle`}
+                  onPress={() => onViewResource(project.id, resource.id)}
+                  size="small"
+                  style={styles.resourceActionButton}
+                />
+                <IconButton
+                  icon={<IconSymbol name="square.and.pencil" size={18} color={iconColor} />}
+                  accessibilityLabel={`${resource.title} kaynağını düzenle`}
+                  onPress={() => onEditResource(project.id, resource)}
+                  size="small"
+                  style={styles.resourceActionButton}
+                />
+                <IconButton
+                  icon={<IconSymbol name="trash.fill" size={18} color={iconColor} />}
+                  accessibilityLabel={`${resource.title} kaynağını sil`}
+                  onPress={() => onDeleteResource(project.id, resource.id)}
+                  size="small"
+                  style={styles.resourceActionButton}
+                />
+              </View>
             </View>
           ))}
         </View>
@@ -173,108 +203,141 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           icon={<IconSymbol name="plus.circle.fill" size={18} color="white" />}
         />
       </View>
-
-      <View style={[styles.taskGroups, isCompact && styles.taskGroupsStacked]}>
-        {(Object.keys(groupedTasks) as Task['priority'][]).map((priority) => (
-          <View
-            key={priority}
-            style={[styles.priorityColumn, isCompact && styles.priorityColumnStacked]}
-          >
-            <View style={styles.priorityHeader}>
-              <ThemedText style={[styles.priorityLabel, { color: priorityTextColor[priority] }]}>
-                {PRIORITY_LABELS[priority]}
-              </ThemedText>
-              <View
-                style={[styles.priorityCountBadge, { backgroundColor: hexToRgba(priorityAccent[priority], 0.12) }]}
-              >
-                <ThemedText style={[styles.priorityCount, { color: priorityAccent[priority] }]}>
-                  {groupedTasks[priority].length}
+      {showTasks ? (
+        <View style={[styles.taskGroups, isCompact && styles.taskGroupsStacked]}>
+          {(Object.keys(groupedTasks) as Task['priority'][]).map((priority) => (
+            <View
+              key={priority}
+              style={[styles.priorityColumn, isCompact && styles.priorityColumnStacked]}
+            >
+              <View style={styles.priorityHeader}>
+                <ThemedText style={[styles.priorityLabel, { color: priorityTextColor[priority] }]}>
+                  {PRIORITY_LABELS[priority]}
                 </ThemedText>
+                <View
+                  style={[styles.priorityCountBadge, { backgroundColor: hexToRgba(priorityAccent[priority], 0.12) }]}
+                >
+                  <ThemedText style={[styles.priorityCount, { color: priorityAccent[priority] }]}>
+                    {groupedTasks[priority].length}
+                  </ThemedText>
+                </View>
               </View>
-            </View>
 
-            {groupedTasks[priority].length === 0 ? (
-              <Pressable
-                style={[
-                  styles.emptyAction,
-                  {
-                    backgroundColor: hexToRgba(priorityAccent[priority], 0.1),
-                    borderColor: hexToRgba(priorityAccent[priority], 0.2),
-                  },
-                ]}
-                onPress={() => onAddTask(project.id, priority)}
-                accessibilityRole="button"
-                accessibilityLabel={`${PRIORITY_LABELS[priority]} için görev ekle`}
-              >
-                <IconSymbol
-                  name="plus.circle.fill"
-                  size={18}
-                  color={priorityAccent[priority]}
-                />
-                <ThemedText
-                  style={[styles.emptyActionText, { color: priorityAccent[priority] }]}
-                >
-                  Görev ekle
-                </ThemedText>
-              </Pressable>
-            ) : (
-              groupedTasks[priority].map((task) => (
+              {groupedTasks[priority].length === 0 ? (
                 <Pressable
-                  key={task.id}
                   style={[
-                    styles.taskItem,
+                    styles.emptyAction,
                     {
-                      backgroundColor: getTaskBackground(priority, task.completed),
-                      borderColor: hexToRgba(priorityAccent[priority], 0.18),
+                      backgroundColor: hexToRgba(priorityAccent[priority], 0.1),
+                      borderColor: hexToRgba(priorityAccent[priority], 0.2),
                     },
-                    task.completed && styles.taskItemCompleted,
                   ]}
-                  onPress={() => onToggleTask(project.id, task.id)}
+                  onPress={() => onAddTask(project.id, priority)}
                   accessibilityRole="button"
-                  accessibilityLabel={`${task.title} görevini ${task.completed ? 'geri al' : 'tamamla'}`}
+                  accessibilityLabel={`${PRIORITY_LABELS[priority]} için görev ekle`}
                 >
-                  <View
-                    style={[
-                      styles.taskStatus,
-                      {
-                        borderColor: task.completed
-                          ? 'transparent'
-                          : hexToRgba(priorityAccent[priority], 0.6),
-                        backgroundColor: task.completed
-                          ? successColor
-                          : hexToRgba(priorityAccent[priority], 0.2),
-                      },
-                    ]}
-                  >
-                    {task.completed && (
-                      <IconSymbol name="checkmark" size={14} color="white" />
-                    )}
-                  </View>
-
-                  <View style={styles.taskTexts}>
-                    <ThemedText style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
-                      {task.title}
-                    </ThemedText>
-                    {task.description && (
-                      <ThemedText style={styles.taskDescription} numberOfLines={2}>
-                        {task.description}
-                      </ThemedText>
-                    )}
-                  </View>
-
-                  <IconButton
-                    icon={<IconSymbol name="trash.fill" size={18} color={iconColor} />}
-                    accessibilityLabel={`${task.title} görevini sil`}
-                    onPress={() => onDeleteTask(project.id, task.id)}
-                    size="small"
-                    style={styles.taskDeleteButton}
+                  <IconSymbol
+                    name="plus.circle.fill"
+                    size={18}
+                    color={priorityAccent[priority]}
                   />
+                  <ThemedText
+                    style={[styles.emptyActionText, { color: priorityAccent[priority] }]}
+                  >
+                    Görev ekle
+                  </ThemedText>
                 </Pressable>
-              ))
-            )}
+              ) : (
+                groupedTasks[priority].map((task) => (
+                  <Pressable
+                    key={task.id}
+                    style={[
+                      styles.taskItem,
+                      {
+                        backgroundColor: getTaskBackground(priority, task.completed),
+                        borderColor: hexToRgba(priorityAccent[priority], 0.18),
+                      },
+                      task.completed && styles.taskItemCompleted,
+                    ]}
+                    onPress={() => onToggleTask(project.id, task.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${task.title} görevini ${task.completed ? 'geri al' : 'tamamla'}`}
+                  >
+                    <View
+                      style={[
+                        styles.taskStatus,
+                        {
+                          borderColor: task.completed
+                            ? 'transparent'
+                            : hexToRgba(priorityAccent[priority], 0.6),
+                          backgroundColor: task.completed
+                            ? successColor
+                            : hexToRgba(priorityAccent[priority], 0.2),
+                        },
+                      ]}
+                    >
+                      {task.completed && (
+                        <IconSymbol name="checkmark" size={14} color="white" />
+                      )}
+                    </View>
+
+                    <View style={styles.taskTexts}>
+                      <ThemedText style={[styles.taskTitle, task.completed && styles.taskTitleCompleted]}>
+                        {task.title}
+                      </ThemedText>
+                      {task.description && (
+                        <ThemedText style={styles.taskDescription} numberOfLines={2}>
+                          {task.description}
+                        </ThemedText>
+                      )}
+                    </View>
+
+                    <IconButton
+                      icon={<IconSymbol name="trash.fill" size={18} color={iconColor} />}
+                      accessibilityLabel={`${task.title} görevini sil`}
+                      onPress={() => onDeleteTask(project.id, task.id)}
+                      size="small"
+                      style={styles.taskDeleteButton}
+                    />
+                  </Pressable>
+                ))
+              )}
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.taskPreview,
+            { backgroundColor: surfaceVariant, borderColor: outlineVariant },
+          ]}
+        >
+          <View style={styles.taskPreviewStats}>
+            <View style={styles.taskPreviewStat}>
+              <ThemedText style={styles.taskPreviewStatLabel}>Toplam</ThemedText>
+              <ThemedText style={styles.taskPreviewStatValue}>{totalTasks}</ThemedText>
+            </View>
+            <View style={styles.taskPreviewStat}>
+              <ThemedText style={styles.taskPreviewStatLabel}>Tamamlanan</ThemedText>
+              <ThemedText style={styles.taskPreviewStatValue}>{completedTasks}</ThemedText>
+            </View>
+            <View style={styles.taskPreviewStat}>
+              <ThemedText style={styles.taskPreviewStatLabel}>Bekleyen</ThemedText>
+              <ThemedText style={styles.taskPreviewStatValue}>{pendingTasks}</ThemedText>
+            </View>
           </View>
-        ))}
-      </View>
+          <ThemedText style={styles.taskPreviewHint}>
+            Görev detayları parent içine girince görüntülenir.
+          </ThemedText>
+          {onOpenDetails ? (
+            <SecondaryButton
+              title="Parent detayını aç"
+              size="small"
+              onPress={() => onOpenDetails(project.id)}
+            />
+          ) : null}
+        </View>
+      )}
     </Card>
   );
 };
@@ -393,7 +456,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     opacity: 0.7,
   },
-  resourceDeleteButton: {
+  resourceActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  resourceActionButton: {
     borderWidth: 0,
   },
   taskGroups: {
@@ -470,5 +538,31 @@ const styles = StyleSheet.create({
   },
   taskDeleteButton: {
     borderWidth: 0,
+  },
+  taskPreview: {
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  taskPreviewStats: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  taskPreviewStat: {
+    flex: 1,
+    gap: 4,
+  },
+  taskPreviewStatLabel: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  taskPreviewStatValue: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  taskPreviewHint: {
+    fontSize: 13,
+    opacity: 0.75,
   },
 });

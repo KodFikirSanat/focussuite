@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { FocusBlock, ProjectWithResources, ResourceItem } from '@/components/modules/home';
-import { PlannerSection, ProjectCard } from '@/components/modules/home';
+import { PlannerSection, ProjectCard, ProjectListItem } from '@/components/modules/home';
 import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/buttons';
 import type { PickerOption } from '@/components/shared/forms';
 import { Picker, TextField } from '@/components/shared/forms';
@@ -38,7 +38,6 @@ const RESOURCE_TYPE_OPTIONS: PickerOption[] = [
 ];
 
 const createId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
-
 
 const getDefaultBlockForm = () => ({
   title: '',
@@ -67,7 +66,7 @@ const sanitizeProject = (project: ProjectWithResources): ProjectWithResources =>
   description: project.description?.trim() || undefined,
   tasks: project.tasks
     .filter((task) => task.title?.trim())
-    .map((task) => sanitizeTask(task)),
+    .map(sanitizeTask),
   resources: project.resources
     .filter((resource) => resource.title?.trim())
     .map(sanitizeResource),
@@ -171,9 +170,16 @@ export default function HomeScreen() {
   });
   const [taskFormError, setTaskFormError] = React.useState<string | undefined>();
 
-  const [resourceModalState, setResourceModalState] = React.useState<{ visible: boolean; projectId: string | null }>({
+  const [resourceModalState, setResourceModalState] = React.useState<{
+    visible: boolean;
+    projectId: string | null;
+    resourceId: string | null;
+    mode: 'create' | 'edit';
+  }>({
     visible: false,
     projectId: null,
+    resourceId: null,
+    mode: 'create',
   });
   const [resourceForm, setResourceForm] = React.useState({
     title: '',
@@ -192,6 +198,17 @@ export default function HomeScreen() {
     blockId: string | null;
     selected: Set<string>;
   }>({ visible: false, blockId: null, selected: new Set() });
+
+  const [projectViewMode, setProjectViewMode] = React.useState<'board' | 'list'>('list');
+  const [projectDetailModal, setProjectDetailModal] = React.useState<{
+    visible: boolean;
+    projectId: string | null;
+  }>({ visible: false, projectId: null });
+  const [resourceDetailsState, setResourceDetailsState] = React.useState<{
+    visible: boolean;
+    projectId: string | null;
+    resourceId: string | null;
+  }>({ visible: false, projectId: null, resourceId: null });
 
   const openProjectModal = React.useCallback(() => {
     setProjectForm({ title: '', description: '' });
@@ -328,20 +345,64 @@ export default function HomeScreen() {
 
       return sanitizeProjects(prevProjects.filter((project) => project.id !== projectId));
     });
+
+    setProjectDetailModal((prev) => (
+      prev.projectId === projectId ? { visible: false, projectId: null } : prev
+    ));
+    setResourceDetailsState((prev) => (
+      prev.projectId === projectId
+        ? { visible: false, projectId: null, resourceId: null }
+        : prev
+    ));
+  }, []);
+
+  const openProjectDetail = React.useCallback((projectId: string) => {
+    setProjectDetailModal({ visible: true, projectId });
+  }, []);
+
+  const closeProjectDetail = React.useCallback(() => {
+    setProjectDetailModal({ visible: false, projectId: null });
   }, []);
 
   const openResourceModal = React.useCallback((projectId: string) => {
-    setResourceModalState({ visible: true, projectId });
+    setResourceModalState({
+      visible: true,
+      projectId,
+      resourceId: null,
+      mode: 'create',
+    });
     setResourceForm({ title: '', type: 'link', url: '', note: '' });
     setResourceFormError(undefined);
   }, []);
 
+  const openResourceEditModal = React.useCallback((projectId: string, resource: ResourceItem) => {
+    setResourceModalState({
+      visible: true,
+      projectId,
+      resourceId: resource.id,
+      mode: 'edit',
+    });
+    setResourceForm({
+      title: resource.title,
+      type: resource.type,
+      url: resource.type === 'link' ? resource.url : '',
+      note: resource.type === 'note' ? resource.note ?? '' : '',
+    });
+    setResourceFormError(undefined);
+  }, []);
+
   const closeResourceModal = React.useCallback(() => {
-    setResourceModalState({ visible: false, projectId: null });
+    setResourceModalState({
+      visible: false,
+      projectId: null,
+      resourceId: null,
+      mode: 'create',
+    });
   }, []);
 
   const handleSubmitResource = React.useCallback(() => {
-    if (!resourceModalState.projectId) return;
+    const { projectId, resourceId, mode } = resourceModalState;
+    if (!projectId) return;
 
     const title = resourceForm.title.trim();
     if (!title) {
@@ -354,8 +415,8 @@ export default function HomeScreen() {
       return;
     }
 
-    const resource: ResourceItem = {
-      id: createId('resource'),
+    const sanitizedResource: ResourceItem = {
+      id: mode === 'edit' && resourceId ? resourceId : createId('resource'),
       title,
       type: resourceForm.type,
       url: resourceForm.type === 'link' ? resourceForm.url.trim() : '',
@@ -364,16 +425,33 @@ export default function HomeScreen() {
 
     setProjects((prev) =>
       sanitizeProjects(
-        prev.map((project) =>
-          project.id === resourceModalState.projectId
-            ? { ...project, resources: [resource, ...project.resources] }
-            : project,
-        ),
+        prev.map((project) => {
+          if (project.id !== projectId) return project;
+
+          if (mode === 'edit' && resourceId) {
+            return {
+              ...project,
+              resources: project.resources.map((resource) =>
+                resource.id === resourceId ? { ...resource, ...sanitizedResource } : resource,
+              ),
+            };
+          }
+
+          return {
+            ...project,
+            resources: [sanitizedResource, ...project.resources],
+          };
+        }),
       ),
     );
 
-    setResourceModalState({ visible: false, projectId: null });
-  }, [resourceForm.note, resourceForm.title, resourceForm.type, resourceForm.url, resourceModalState.projectId]);
+    setResourceModalState({
+      visible: false,
+      projectId: null,
+      resourceId: null,
+      mode: 'create',
+    });
+  }, [resourceForm.note, resourceForm.title, resourceForm.type, resourceForm.url, resourceModalState]);
 
   const handleDeleteResource = React.useCallback((projectId: string, resourceId: string) => {
     setProjects((prev) =>
@@ -388,6 +466,20 @@ export default function HomeScreen() {
         ),
       ),
     );
+
+    setResourceDetailsState((prev) => (
+      prev.projectId === projectId && prev.resourceId === resourceId
+        ? { visible: false, projectId: null, resourceId: null }
+        : prev
+    ));
+  }, []);
+
+  const openResourceDetails = React.useCallback((projectId: string, resourceId: string) => {
+    setResourceDetailsState({ visible: true, projectId, resourceId });
+  }, []);
+
+  const closeResourceDetails = React.useCallback(() => {
+    setResourceDetailsState({ visible: false, projectId: null, resourceId: null });
   }, []);
 
   const openBlockModal = React.useCallback(() => {
@@ -485,6 +577,23 @@ export default function HomeScreen() {
     return map;
   }, [projects]);
 
+  const activeProject = React.useMemo(() => {
+    if (!projectDetailModal.projectId) return null;
+
+    return projects.find((project) => project.id === projectDetailModal.projectId) ?? null;
+  }, [projectDetailModal.projectId, projects]);
+
+  const { projectId: resourceProjectId, resourceId: resourceItemId } = resourceDetailsState;
+
+  const activeResource = React.useMemo(() => {
+    if (!resourceProjectId || !resourceItemId) return null;
+
+    const project = projects.find((item) => item.id === resourceProjectId);
+    if (!project) return null;
+
+    return project.resources.find((resource) => resource.id === resourceItemId) ?? null;
+  }, [projects, resourceProjectId, resourceItemId]);
+
   return (
     <SafeAreaWrapper>
       <ScrollView
@@ -514,31 +623,99 @@ export default function HomeScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <ThemedText type="subtitle">Projeler & Parent’lar</ThemedText>
-            <SecondaryButton
-              title="Yeni parent"
-              size="small"
-              onPress={openProjectModal}
-            />
+            <ThemedText type="subtitle">Projeler</ThemedText>
+            <View style={styles.sectionActions}>
+              <View style={styles.viewToggle}>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.viewToggleButton,
+                    projectViewMode === 'board' && {
+                      borderColor: tintColor,
+                      backgroundColor: `${tintColor}1A`,
+                    },
+                    pressed && styles.viewToggleButtonPressed,
+                  ]}
+                  onPress={() => setProjectViewMode('board')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Kart görünümünü aç"
+                >
+                  <IconSymbol
+                    name="square.grid.2x2"
+                    size={16}
+                    color={projectViewMode === 'board' ? tintColor : iconColor}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.viewToggleLabel,
+                      projectViewMode === 'board' && { color: tintColor },
+                    ]}
+                  >
+                    Kart
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.viewToggleButton,
+                    projectViewMode === 'list' && {
+                      borderColor: tintColor,
+                      backgroundColor: `${tintColor}1A`,
+                    },
+                    pressed && styles.viewToggleButtonPressed,
+                  ]}
+                  onPress={() => setProjectViewMode('list')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Liste görünümünü aç"
+                >
+                  <IconSymbol
+                    name="list.bullet"
+                    size={16}
+                    color={projectViewMode === 'list' ? tintColor : iconColor}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.viewToggleLabel,
+                      projectViewMode === 'list' && { color: tintColor },
+                    ]}
+                  >
+                    Liste
+                  </ThemedText>
+                </Pressable>
+              </View>
+              <SecondaryButton
+                title="Yeni parent"
+                size="small"
+                onPress={openProjectModal}
+              />
+            </View>
           </View>
 
           {projects.length === 0 ? (
             <ThemedText style={styles.emptyState}>
               Henüz parent eklenmedi. Öncelikli işlerini gruplayarak başlamayı dene.
             </ThemedText>
-          ) : (
+          ) : projectViewMode === 'board' ? (
             projects.map((project) => (
               <ProjectCard
                 key={project.id}
                 project={project}
                 onAddTask={openTaskModal}
                 onAddResource={openResourceModal}
+                onEditResource={openResourceEditModal}
+                onViewResource={openResourceDetails}
                 onToggleTask={handleToggleTask}
                 onDeleteTask={handleDeleteTask}
                 onDeleteResource={handleDeleteResource}
                 onDeleteProject={handleDeleteProject}
+                onOpenDetails={openProjectDetail}
+                showTasks={false}
               />
             ))
+          ) : (
+            <View style={styles.projectList}>
+              {projects.map((project) => (
+                <ProjectListItem key={project.id} project={project} onPress={openProjectDetail} />
+              ))}
+            </View>
           )}
         </View>
 
@@ -622,7 +799,7 @@ export default function HomeScreen() {
 
       <FormModal
         visible={resourceModalState.visible}
-        title="Kaynak ekle"
+        title={resourceModalState.mode === 'edit' ? 'Kaynağı düzenle' : 'Kaynak ekle'}
         onClose={closeResourceModal}
         footer={(
           <View style={styles.modalActions}>
@@ -631,14 +808,6 @@ export default function HomeScreen() {
           </View>
         )}
       >
-        <TextField
-          label="Başlık"
-          placeholder="Kaynağı nasıl adlandırmak istersin?"
-          value={resourceForm.title}
-          onChangeText={(text) => setResourceForm((prev) => ({ ...prev, title: text }))}
-          required
-          error={resourceFormError}
-        />
         <Picker
           label="Tür"
           value={resourceForm.type}
@@ -646,6 +815,14 @@ export default function HomeScreen() {
             setResourceForm((prev) => ({ ...prev, type: value as ResourceType }))
           }
           options={RESOURCE_TYPE_OPTIONS}
+        />
+        <TextField
+          label="Kaynak başlığı"
+          placeholder="Örn. Figma dosyası"
+          value={resourceForm.title}
+          onChangeText={(text) => setResourceForm((prev) => ({ ...prev, title: text }))}
+          required
+          error={resourceFormError}
         />
         {resourceForm.type === 'link' ? (
           <TextField
@@ -664,6 +841,105 @@ export default function HomeScreen() {
             multiline
             numberOfLines={4}
           />
+        )}
+      </FormModal>
+
+      <FormModal
+        visible={projectDetailModal.visible}
+        title={activeProject?.title ?? 'Parent detayı'}
+        onClose={closeProjectDetail}
+        footer={(
+          <View style={styles.modalActions}>
+            <SecondaryButton title="Kapat" onPress={closeProjectDetail} />
+            {activeProject ? (
+              <PrimaryButton
+                title="Görev ekle"
+                onPress={() => {
+                  closeProjectDetail();
+                  openTaskModal(activeProject.id);
+                }}
+              />
+            ) : null}
+          </View>
+        )}
+      >
+        {activeProject ? (
+          <View style={styles.projectDetailContent}>
+            <ProjectCard
+              project={activeProject}
+              onAddTask={(projectId, priority) => {
+                closeProjectDetail();
+                openTaskModal(projectId, priority);
+              }}
+              onAddResource={(projectId) => {
+                closeProjectDetail();
+                openResourceModal(projectId);
+              }}
+              onEditResource={(projectId, resource) => {
+                closeProjectDetail();
+                openResourceEditModal(projectId, resource);
+              }}
+              onViewResource={openResourceDetails}
+              onToggleTask={handleToggleTask}
+              onDeleteTask={handleDeleteTask}
+              onDeleteResource={handleDeleteResource}
+              onDeleteProject={(projectId) => {
+                handleDeleteProject(projectId);
+                closeProjectDetail();
+              }}
+            />
+          </View>
+        ) : (
+          <ThemedText style={styles.emptyState}>Parent bulunamadı.</ThemedText>
+        )}
+      </FormModal>
+
+      <FormModal
+        visible={resourceDetailsState.visible}
+        title={activeResource?.title ?? 'Kaynak detay'}
+        onClose={closeResourceDetails}
+        footer={(
+          <View style={styles.modalActions}>
+            <SecondaryButton title="Kapat" onPress={closeResourceDetails} />
+            {activeResource && resourceDetailsState.projectId ? (
+              <PrimaryButton
+                title="Düzenle"
+                onPress={() => {
+                  closeResourceDetails();
+                  openResourceEditModal(resourceDetailsState.projectId!, activeResource);
+                }}
+              />
+            ) : null}
+          </View>
+        )}
+      >
+        {activeResource ? (
+          <View style={styles.resourceDetailsContent}>
+            <View style={styles.detailItem}>
+              <ThemedText style={styles.detailLabel}>Tür</ThemedText>
+              <ThemedText style={styles.detailValue}>
+                {activeResource.type === 'link' ? 'Link' : 'Not'}
+              </ThemedText>
+            </View>
+
+            {activeResource.type === 'link' && activeResource.url ? (
+              <View style={styles.detailItem}>
+                <ThemedText style={styles.detailLabel}>URL</ThemedText>
+                <ThemedText style={styles.detailValue} numberOfLines={3}>
+                  {activeResource.url}
+                </ThemedText>
+              </View>
+            ) : null}
+
+            {activeResource.type === 'note' && activeResource.note ? (
+              <View style={styles.detailNoteBox}>
+                <ThemedText style={styles.detailLabel}>Not</ThemedText>
+                <ThemedText style={styles.detailValue}>{activeResource.note}</ThemedText>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <ThemedText style={styles.emptyState}>Kaynak bulunamadı.</ThemedText>
         )}
       </FormModal>
 
@@ -814,9 +1090,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  sectionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  viewToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.02)',
+  },
+  viewToggleButtonPressed: {
+    opacity: 0.8,
+  },
+  viewToggleLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   emptyState: {
     fontSize: 14,
     opacity: 0.7,
+  },
+  projectList: {
+    gap: 12,
+  },
+  projectDetailContent: {
+    paddingVertical: 8,
+  },
+  resourceDetailsContent: {
+    gap: 12,
+  },
+  detailItem: {
+    gap: 4,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    opacity: 0.7,
+  },
+  detailValue: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  detailNoteBox: {
+    gap: 6,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.04)',
   },
   modalContainer: {
     flex: 1,
