@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { FocusBlock, ProjectWithResources, ResourceItem } from '@/components/modules/home';
-import { PlannerSection, ProjectCard, ProjectListItem } from '@/components/modules/home';
+import { ProjectCard, ProjectListItem } from '@/components/modules/home';
 import { IconButton, PrimaryButton, SecondaryButton } from '@/components/shared/buttons';
 import type { PickerOption } from '@/components/shared/forms';
 import { Picker, TextField } from '@/components/shared/forms';
@@ -153,7 +153,7 @@ export default function HomeScreen() {
   const [projects, setProjects] = React.useState<ProjectWithResources[]>(() =>
     sanitizeProjects(createInitialProjects()),
   );
-  const [blocks, setBlocks] = React.useState<FocusBlock[]>(() =>
+  const [, setBlocks] = React.useState<FocusBlock[]>(() =>
     sanitizeBlocks(createInitialBlocks()),
   );
 
@@ -519,19 +519,6 @@ export default function HomeScreen() {
     setBlockModalVisible(false);
   }, [blockForm.date, blockForm.endTime, blockForm.note, blockForm.startTime, blockForm.title]);
 
-  const handleDeleteBlock = React.useCallback((blockId: string) => {
-    setBlocks((prev) => sanitizeBlocks(prev.filter((block) => block.id !== blockId)));
-  }, []);
-
-  const openAssignmentModal = React.useCallback((blockId: string) => {
-    const block = blocks.find((item) => item.id === blockId);
-    setAssignmentModal({
-      visible: true,
-      blockId,
-      selected: new Set(block?.taskIds ?? []),
-    });
-  }, [blocks]);
-
   const closeAssignmentModal = React.useCallback(() => {
     setAssignmentModal({ visible: false, blockId: null, selected: new Set() });
   }, []);
@@ -563,25 +550,6 @@ export default function HomeScreen() {
 
     closeAssignmentModal();
   }, [assignmentModal.blockId, assignmentModal.selected, closeAssignmentModal]);
-
-  const handleStartBlock = React.useCallback(() => {
-    router.push('/(tabs)/timer');
-  }, [router]);
-
-  const tasksById = React.useMemo(() => {
-    const map: Record<string, { id: string; title: string; projectTitle?: string; completed: boolean }> = {};
-    projects.forEach((project) => {
-      project.tasks.forEach((task) => {
-        map[task.id] = {
-          id: task.id,
-          title: task.title,
-          projectTitle: project.title,
-          completed: task.completed,
-        };
-      });
-    });
-    return map;
-  }, [projects]);
 
   const activeProject = React.useMemo(() => {
     if (!projectDetailModal.projectId) return null;
@@ -691,13 +659,11 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <PlannerSection
-            blocks={blocks}
-            tasksById={tasksById}
-            onAddBlock={openBlockModal}
-            onAssignTasks={openAssignmentModal}
-            onStartBlock={handleStartBlock}
-            onDeleteBlock={handleDeleteBlock}
+          <PrimaryButton
+            title="Yarını Planla"
+            icon={<IconSymbol name="calendar" size={20} color="white" />}
+            onPress={() => router.push('/planner')}
+            fullWidth
           />
         </View>
       </ScrollView>

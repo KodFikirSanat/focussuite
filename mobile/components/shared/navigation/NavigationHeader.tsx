@@ -1,11 +1,10 @@
-import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { NavigationHeaderProps } from '@/types';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors } from '@/constants/theme';
+import { NavigationHeaderProps } from '@/types';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { BackButton } from './BackButton';
 
 export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   title,
@@ -13,16 +12,13 @@ export const NavigationHeader: React.FC<NavigationHeaderProps> = ({
   rightAction,
   onBackPress,
 }) => {
-  const colorScheme = useColorScheme();
-
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <ThemedView style={styles.container}>
         <View style={styles.content}>
           {showBackButton && (
             <View style={styles.leftAction}>
-              {/* TODO: Implement BackButton component */}
-              {null}
+              <BackButton onPress={onBackPress} />
             </View>
           )}
 

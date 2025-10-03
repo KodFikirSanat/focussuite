@@ -76,6 +76,14 @@ export interface TimeBlock {
   taskId: string;
 }
 
+export interface Block {
+  id: string;
+  title: string;
+  startTime: Date;
+  endTime: Date;
+  tasks: Task[];
+}
+
 export interface BlockRule {
   id: string;
   name: string;
