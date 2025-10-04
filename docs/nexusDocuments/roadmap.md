@@ -15,8 +15,8 @@ This roadmap is designed to build the project from the ground up, progressively 
         -   `serde`: For serializing data structures (e.g., to JSON).
         -   `chrono`: For date and time management.
 
--   [ ] **Step 1.2: Define Data Models**
-    -   Create Rust `structs` to represent all ~12 database tables. Make these structs serializable with `serde`.
+-   [x] **Step 1.2: Define Data Models**
+    -   Create Rust `structs` to represent all 12 database tables. Make these structs serializable with `serde`.
     -   Write the database schema (SQL `CREATE TABLE` commands) in a separate `.sql` file.
 
 -   [ ] **Step 1.3: Code the Database Layer**
