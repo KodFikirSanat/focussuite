@@ -1,17 +1,13 @@
 {
-  "name": "Expo React Native (mobile)",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
-  "workspaceFolder": "/workspaces/foucussuite/mobile",
-
-  "features": {
-    "ghcr.io/devcontainers-contrib/features/pnpm:2": {
-      "version": "latest"
-    }
+  "name": "FocusSuite Codespace",
+  "build": {
+    "dockerfile": "Dockerfile"
   },
+  "workspaceFolder": "/workspaces/focussuite",
+  "remoteUser": "codespace",
 
-  // Sadece "pnpm install" komutunu bırakıyoruz. 
-  // Gereksiz ve eski olan "expo-cli" kurulumunu kaldırdık.
-  "postCreateCommand": "pnpm install",
+  // Kod tabanının tüm bölümleri için (mobile, website, nexus-core) ortak araçları hazırlarız.
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
 
   "customizations": {
     "vscode": {
@@ -19,13 +15,20 @@
         "esbenp.prettier-vscode",
         "msjsdiag.vscode-react-native",
         "dsznajder.es7-react-js-snippets",
-        "gamunu.vscode-yarn",
-        "eg2.vscode-npm-script"
-      ]
+        "eg2.vscode-npm-script",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "files.eol": "\n",
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
   },
 
-  "forwardPorts": [19000, 19001, 19002],
+  "forwardPorts": [19000, 19001, 19002, 3000, 8000],
   "portsAttributes": {
     "19000": {
       "label": "Expo Dev Server",
@@ -36,6 +39,13 @@
     },
     "19002": {
       "label": "Expo LAN"
+    },
+    "3000": {
+      "label": "Next.js",
+      "onAutoForward": "openBrowser"
+    },
+    "8000": {
+      "label": "Rust Backend"
     }
   }
 }

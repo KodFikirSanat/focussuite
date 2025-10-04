@@ -23,6 +23,10 @@ Desk workers, students, freelancers, and remote employees who struggle with dist
 
 Currently in development. Core features are being built with a focus on simplicity and cross-platform compatibility.
 
+## Development Setup
+
+For hazır bir GitHub Codespaces ortamı ve komut referansı için [`docs/codespaces-setup.md`](docs/codespaces-setup.md) belgesine göz atın. Bu rehber mobil (Expo), web (Next.js) ve Rust çekirdek modüllerini aynı konteynerde yönetmenize yardımcı olur.
+
 ## License
 
 MIT License
