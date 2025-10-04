@@ -19,7 +19,7 @@ This roadmap is designed to build the project from the ground up, progressively 
     -   Create Rust `structs` to represent all 12 database tables. Make these structs serializable with `serde`.
     -   Write the database schema (SQL `CREATE TABLE` commands) in a separate `.sql` file.
 
--   [ ] **Step 1.3: Code the Database Layer**
+-   [x] **Step 1.3: Code the Database Layer**
     -   Write functions to establish a database connection, execute the schema, and perform basic CRUD (Create, Read, Update, Delete) operations.
     -   Example functions: `initialize_database`, `create_note`, `update_note_content`, `get_all_notes`.
 
